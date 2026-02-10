@@ -49,7 +49,7 @@ class DashboardCard extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.all(iconPadding),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.15),
+                      color: Colors.white.withOpacity(0.05),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(icon, color: Colors.white, size: iconSize),

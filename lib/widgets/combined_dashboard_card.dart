@@ -120,7 +120,6 @@ class CombinedDashboardCard extends StatelessWidget {
                               voltage,
                               Colors.white,
                               Icons.bolt,
-                              Colors.amber,
                               isMobile,
                             ),
                             SizedBox(width: isMobile ? 16 : 24),
@@ -129,7 +128,6 @@ class CombinedDashboardCard extends StatelessWidget {
                               current,
                               Colors.white,
                               Icons.electrical_services,
-                              Colors.redAccent,
                               isMobile,
                             ),
                           ],
@@ -142,7 +140,6 @@ class CombinedDashboardCard extends StatelessWidget {
                               power,
                               Colors.white,
                               Icons.power,
-                              Colors.blue,
                               isMobile,
                             ),
                             SizedBox(width: isMobile ? 16 : 24),
@@ -151,7 +148,6 @@ class CombinedDashboardCard extends StatelessWidget {
                               temperature,
                               Colors.white,
                               Icons.thermostat,
-                              Colors.orange,
                               isMobile,
                             ),
                           ],
@@ -175,14 +171,14 @@ class CombinedDashboardCard extends StatelessWidget {
                               centerSpaceRadius: isMobile ? 65 : 70,
                               sections: [
                                 PieChartSectionData(
-                                  color: Colors.blueAccent,
+                                  color: AppColors.primary,
                                   value: waterLevel,
                                   title: '',
                                   radius: isMobile ? 20 : 25,
                                   showTitle: false,
                                 ),
                                 PieChartSectionData(
-                                  color: Colors.blueAccent.withOpacity(0.1),
+                                  color: AppColors.primary.withOpacity(0.1),
                                   value: 100 - waterLevel,
                                   title: '',
                                   radius: isMobile ? 20 : 25,
@@ -205,7 +201,7 @@ class CombinedDashboardCard extends StatelessWidget {
                               children: [
                                 Icon(
                                   Icons.water_drop,
-                                  color: Colors.blueAccent,
+                                  color: Colors.white,
                                   size: isMobile ? 24 : 28,
                                 ),
                                 const SizedBox(height: 4),
@@ -256,7 +252,7 @@ class CombinedDashboardCard extends StatelessWidget {
                     isMobile,
                   ),
                   _buildMetricDivider(),
-                  _buildBottomStat('Uptime', '24h 12m', Colors.blue, isMobile),
+                  _buildBottomStat('Uptime', '24h 12m', Colors.white, isMobile),
                 ],
               ),
             ],
@@ -275,7 +271,6 @@ class CombinedDashboardCard extends StatelessWidget {
     String value,
     Color valueColor,
     IconData icon,
-    Color iconColor,
     bool isMobile,
   ) {
     return Expanded(
@@ -285,10 +280,10 @@ class CombinedDashboardCard extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(isMobile ? 8 : 10),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: Colors.white.withOpacity(0.05),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: iconColor, size: isMobile ? 20 : 24),
+            child: Icon(icon, color: Colors.white, size: isMobile ? 20 : 24),
           ),
           SizedBox(width: isMobile ? 12 : 16),
           Expanded(

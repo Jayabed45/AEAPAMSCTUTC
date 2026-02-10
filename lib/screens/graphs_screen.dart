@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../widgets/statistic_chart.dart';
 import '../widgets/custom_header.dart';
+import '../widgets/combined_charts_section.dart';
+import '../constants/app_colors.dart';
 
 class GraphsScreen extends StatelessWidget {
   const GraphsScreen({super.key});
@@ -9,15 +11,15 @@ class GraphsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomHeader(
-        title: Text('Statistics'),
-      ),
+      appBar: const CustomHeader(title: Text('Statistics')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const CombinedChartsSection(),
+              const SizedBox(height: 24),
               LayoutBuilder(
                 builder: (context, constraints) {
                   // Responsive grid: 2 columns on mobile, 3 on tablet, 4 on desktop
@@ -39,7 +41,7 @@ class GraphsScreen extends StatelessWidget {
                       StatisticChart(
                         title: 'Voltage',
                         unit: '(V)',
-                        lineColor: Colors.amber,
+                        lineColor: AppColors.primary,
                         maxY: 40,
                         spots: const [
                           FlSpot(6, 20),
@@ -52,7 +54,7 @@ class GraphsScreen extends StatelessWidget {
                       StatisticChart(
                         title: 'Current',
                         unit: '(A)',
-                        lineColor: Colors.green,
+                        lineColor: Colors.white,
                         maxY: 6,
                         spots: const [
                           FlSpot(6, 2),
@@ -65,7 +67,7 @@ class GraphsScreen extends StatelessWidget {
                       StatisticChart(
                         title: 'Energy Usage',
                         unit: '',
-                        lineColor: Colors.blue,
+                        lineColor: AppColors.secondary,
                         maxY: 0.4,
                         spots: const [
                           FlSpot(6, 0.1),
@@ -78,7 +80,7 @@ class GraphsScreen extends StatelessWidget {
                       StatisticChart(
                         title: 'Water Level',
                         unit: '(%)',
-                        lineColor: Colors.cyan,
+                        lineColor: Colors.white,
                         maxY: 60,
                         spots: const [
                           FlSpot(6, 30),
