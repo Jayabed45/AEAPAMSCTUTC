@@ -46,30 +46,37 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomHeader(
         height: 80,
         title: Row(
           children: [
-            const Icon(Icons.wb_sunny, color: Colors.white, size: 40),
+            Icon(
+              Icons.wb_sunny,
+              color: Theme.of(context).colorScheme.onSurface,
+              size: 40,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
+                children: [
                   Text(
                     'PV System Tracker',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     'CTU - TC ',
-                    style: TextStyle(fontSize: 12, color: AppColors.secondary),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],

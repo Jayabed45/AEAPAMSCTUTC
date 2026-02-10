@@ -27,7 +27,10 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         IconButton(
           onPressed: () {},
-          icon: const Icon(Icons.notifications, color: Colors.white),
+          icon: Icon(
+            Icons.notifications,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
         IconButton(
           onPressed:
@@ -40,7 +43,10 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 );
               },
-          icon: const Icon(Icons.account_circle, color: Colors.white),
+          icon: Icon(
+            Icons.account_circle,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
         const SizedBox(width: 16),
       ],

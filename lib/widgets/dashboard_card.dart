@@ -34,9 +34,9 @@ class DashboardCard extends StatelessWidget {
         return Container(
           padding: EdgeInsets.all(padding),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            border: Border.all(color: Theme.of(context).dividerColor),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,10 +49,16 @@ class DashboardCard extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.all(iconPadding),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: Theme.of(
+                        context,
+                      ).dividerColor.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(icon, color: Colors.white, size: iconSize),
+                    child: Icon(
+                      icon,
+                      color: Theme.of(context).colorScheme.onSurface,
+                      size: iconSize,
+                    ),
                   ),
                   if (statusText != null)
                     Flexible(
@@ -62,7 +68,9 @@ class DashboardCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: (statusColor ?? Colors.green).withOpacity(0.2),
+                          color: (statusColor ?? Colors.green).withValues(
+                            alpha: 0.2,
+                          ),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -91,7 +99,7 @@ class DashboardCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: isSmall ? 20 : 24, // Increased size
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ),
@@ -110,7 +118,7 @@ class DashboardCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: isSmall ? 12 : 14,
                       fontWeight: FontWeight.w600,
-                      color: Colors.blue[200],
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   SizedBox(height: isSmall ? 2 : 4),
@@ -120,7 +128,9 @@ class DashboardCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: isSmall ? 10 : 11,
-                      color: Colors.grey,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],

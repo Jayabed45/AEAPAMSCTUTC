@@ -31,12 +31,12 @@ class CombinedDashboardCard extends StatelessWidget {
         return Container(
           padding: EdgeInsets.all(isMobile ? 16 : 24),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            border: Border.all(color: Theme.of(context).dividerColor),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -57,17 +57,17 @@ class CombinedDashboardCard extends StatelessWidget {
                         Text(
                           title,
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontSize: isMobile ? 18 : 20,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 0.5,
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
+                        Text(
                           'Real-Time Monitoring',
                           style: TextStyle(
-                            color: AppColors.secondary,
+                            color: Theme.of(context).colorScheme.secondary,
                             fontSize: 12,
                           ),
                         ),
@@ -80,9 +80,11 @@ class CombinedDashboardCard extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
+                      color: Colors.green.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.green.withOpacity(0.3)),
+                      border: Border.all(
+                        color: Colors.green.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -116,17 +118,19 @@ class CombinedDashboardCard extends StatelessWidget {
                         Row(
                           children: [
                             _buildMetricItem(
+                              context,
                               'Voltage',
                               voltage,
-                              Colors.white,
+                              Theme.of(context).colorScheme.onSurface,
                               Icons.bolt,
                               isMobile,
                             ),
                             SizedBox(width: isMobile ? 16 : 24),
                             _buildMetricItem(
+                              context,
                               'Current',
                               current,
-                              Colors.white,
+                              Theme.of(context).colorScheme.onSurface,
                               Icons.electrical_services,
                               isMobile,
                             ),
@@ -136,17 +140,19 @@ class CombinedDashboardCard extends StatelessWidget {
                         Row(
                           children: [
                             _buildMetricItem(
+                              context,
                               'Power',
                               power,
-                              Colors.white,
+                              Theme.of(context).colorScheme.onSurface,
                               Icons.power,
                               isMobile,
                             ),
                             SizedBox(width: isMobile ? 16 : 24),
                             _buildMetricItem(
+                              context,
                               'Temperature',
                               temperature,
-                              Colors.white,
+                              Theme.of(context).colorScheme.onSurface,
                               Icons.thermostat,
                               isMobile,
                             ),
@@ -178,7 +184,9 @@ class CombinedDashboardCard extends StatelessWidget {
                                   showTitle: false,
                                 ),
                                 PieChartSectionData(
-                                  color: AppColors.primary.withOpacity(0.1),
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   value: 100 - waterLevel,
                                   title: '',
                                   radius: isMobile ? 20 : 25,
@@ -201,22 +209,27 @@ class CombinedDashboardCard extends StatelessWidget {
                               children: [
                                 Icon(
                                   Icons.water_drop,
-                                  color: Colors.white,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                   size: isMobile ? 24 : 28,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   '${waterLevel.toInt()}%',
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
                                     fontSize: isMobile ? 32 : 42,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const Text(
+                                Text(
                                   'Water Level',
                                   style: TextStyle(
-                                    color: Colors.grey,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.6),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -231,7 +244,7 @@ class CombinedDashboardCard extends StatelessWidget {
               ),
 
               const SizedBox(height: 24),
-              const Divider(color: Colors.white10),
+              Divider(color: Theme.of(context).dividerColor),
               const SizedBox(height: 24),
 
               // Bottom Stats
@@ -239,20 +252,28 @@ class CombinedDashboardCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildBottomStat(
+                    context,
                     'System Status',
                     'Normal',
                     Colors.green,
                     isMobile,
                   ),
-                  _buildMetricDivider(),
+                  _buildMetricDivider(context),
                   _buildBottomStat(
+                    context,
                     'Active Alerts',
                     '0',
-                    Colors.white,
+                    Theme.of(context).colorScheme.onSurface,
                     isMobile,
                   ),
-                  _buildMetricDivider(),
-                  _buildBottomStat('Uptime', '24h 12m', Colors.white, isMobile),
+                  _buildMetricDivider(context),
+                  _buildBottomStat(
+                    context,
+                    'Uptime',
+                    '24h 12m',
+                    Theme.of(context).colorScheme.onSurface,
+                    isMobile,
+                  ),
                 ],
               ),
             ],
@@ -262,11 +283,16 @@ class CombinedDashboardCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMetricDivider() {
-    return Container(height: 30, width: 1, color: Colors.white10);
+  Widget _buildMetricDivider(BuildContext context) {
+    return Container(
+      height: 30,
+      width: 1,
+      color: Theme.of(context).dividerColor,
+    );
   }
 
   Widget _buildMetricItem(
+    BuildContext context,
     String label,
     String value,
     Color valueColor,
@@ -280,10 +306,14 @@ class CombinedDashboardCard extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(isMobile ? 8 : 10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: Colors.white, size: isMobile ? 20 : 24),
+            child: Icon(
+              icon,
+              color: Theme.of(context).colorScheme.onSurface,
+              size: isMobile ? 20 : 24,
+            ),
           ),
           SizedBox(width: isMobile ? 12 : 16),
           Expanded(
@@ -293,7 +323,9 @@ class CombinedDashboardCard extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    color: Colors.grey,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
                     fontSize: isMobile ? 12 : 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -316,6 +348,7 @@ class CombinedDashboardCard extends StatelessWidget {
   }
 
   Widget _buildBottomStat(
+    BuildContext context,
     String label,
     String value,
     Color color,
@@ -327,7 +360,9 @@ class CombinedDashboardCard extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: Colors.grey,
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.6),
             fontSize: isMobile ? 10 : 12,
             fontWeight: FontWeight.w500,
           ),

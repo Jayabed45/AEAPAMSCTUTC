@@ -10,9 +10,9 @@ class CombinedChartsSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -22,10 +22,10 @@ class CombinedChartsSection extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'System Overview',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -33,11 +33,15 @@ class CombinedChartsSection extends StatelessWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      _buildLegendItem('Voltage', AppColors.primary),
+                      _buildLegendItem(context, 'Voltage', AppColors.primary),
                       const SizedBox(width: 12),
-                      _buildLegendItem('Current', Colors.white),
+                      _buildLegendItem(
+                        context,
+                        'Current',
+                        Theme.of(context).colorScheme.onSurface,
+                      ),
                       const SizedBox(width: 12),
-                      _buildLegendItem('Energy', AppColors.secondary),
+                      _buildLegendItem(context, 'Energy', AppColors.secondary),
                     ],
                   ),
                 ],
@@ -54,7 +58,9 @@ class CombinedChartsSection extends StatelessWidget {
                   drawVerticalLine: false,
                   getDrawingHorizontalLine:
                       (value) => FlLine(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Theme.of(
+                          context,
+                        ).dividerColor.withValues(alpha: 0.1),
                         strokeWidth: 1,
                       ),
                 ),
@@ -76,7 +82,9 @@ class CombinedChartsSection extends StatelessWidget {
                           return Text(
                             '${value.toInt()}h',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.3),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.3),
                               fontSize: 10,
                             ),
                           );
@@ -94,7 +102,9 @@ class CombinedChartsSection extends StatelessWidget {
                         return Text(
                           value.toInt().toString(),
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.3),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.3),
                             fontSize: 10,
                           ),
                         );
@@ -141,7 +151,7 @@ class CombinedChartsSection extends StatelessWidget {
                       FlSpot(10, 3.5),
                     ],
                     isCurved: true,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                     barWidth: 3,
                     isStrokeCapRound: true,
                     dotData: const FlDotData(show: false),
@@ -166,12 +176,15 @@ class CombinedChartsSection extends StatelessWidget {
                 ],
                 lineTouchData: LineTouchData(
                   touchTooltipData: LineTouchTooltipData(
-                    getTooltipColor: (touchedSpot) => AppColors.surface,
+                    getTooltipColor:
+                        (touchedSpot) => Theme.of(context).cardColor,
                     getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                       return touchedBarSpots.map((barSpot) {
                         final flSpot = barSpot;
                         String unit = '';
-                        Color textColor = barSpot.bar.color ?? Colors.white;
+                        Color textColor =
+                            barSpot.bar.color ??
+                            Theme.of(context).colorScheme.onSurface;
 
                         // Identify series by color or index
                         if (barSpot.barIndex == 0)
@@ -200,7 +213,7 @@ class CombinedChartsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildLegendItem(String label, Color color) {
+  Widget _buildLegendItem(BuildContext context, String label, Color color) {
     return Row(
       children: [
         Container(
@@ -211,7 +224,12 @@ class CombinedChartsSection extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+          style: TextStyle(
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.7),
+            fontSize: 12,
+          ),
         ),
       ],
     );

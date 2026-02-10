@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
+import '../providers/theme_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -11,21 +13,30 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _pauseNotifications = true;
-  bool _darkMode = false;
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.isDarkMode;
+    final textColor = isDark ? Colors.white : Colors.black;
+    final subTextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final cardColor = Theme.of(context).cardColor;
+    final borderColor =
+        isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.05);
+    final iconBgColor =
+        isDark
+            ? Colors.white.withValues(alpha: 0.08)
+            : Colors.black.withValues(alpha: 0.05);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            color: Colors.white,
-            size: 20,
-          ),
+          icon: Icon(Icons.arrow_back_ios_new, color: textColor, size: 20),
           onPressed: () {
             Navigator.of(context).pop();
           },
@@ -33,7 +44,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: Text(
           'Settings',
           style: GoogleFonts.poppins(
-            color: Colors.white,
+            color: textColor,
             fontWeight: FontWeight.w600,
             fontSize: 20,
           ),
@@ -45,17 +56,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           children: [
             // User Profile Section
-            _buildProfileSection(),
+            _buildProfileSection(
+              cardColor,
+              borderColor,
+              textColor,
+              subTextColor,
+              iconBgColor,
+            ),
             const SizedBox(height: 24),
 
             // Settings Sections
-            _buildSectionHeader('Preferences'),
+            _buildSectionHeader('Preferences', subTextColor),
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.card,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                border: Border.all(color: borderColor),
+                boxShadow:
+                    isDark
+                        ? []
+                        : [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
               ),
               child: Column(
                 children: [
@@ -65,53 +92,83 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     value: _pauseNotifications,
                     onChanged:
                         (value) => setState(() => _pauseNotifications = value),
+                    textColor: textColor,
+                    iconBgColor: iconBgColor,
+                    activeTrackColor: AppColors.primary,
                   ),
-                  _buildDivider(),
+                  _buildDivider(borderColor),
                   _buildListTile(
                     icon: Icons.tune,
                     title: 'General settings',
                     onTap: () {},
+                    textColor: textColor,
+                    iconBgColor: iconBgColor,
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
-            _buildSectionHeader('Appearance & Language'),
+            _buildSectionHeader('Appearance & Language', subTextColor),
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.card,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                border: Border.all(color: borderColor),
+                boxShadow:
+                    isDark
+                        ? []
+                        : [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
               ),
               child: Column(
                 children: [
                   _buildSwitchTile(
                     icon: Icons.dark_mode_outlined,
                     title: 'Dark mode',
-                    value: _darkMode,
-                    onChanged: (value) => setState(() => _darkMode = value),
+                    value: isDark,
+                    onChanged: (value) => themeProvider.toggleTheme(value),
+                    textColor: textColor,
+                    iconBgColor: iconBgColor,
+                    activeTrackColor: AppColors.primary,
                   ),
-                  _buildDivider(),
+                  _buildDivider(borderColor),
                   _buildListTile(
                     icon: Icons.translate,
                     title: 'Language',
                     trailingText: 'English',
                     onTap: () {},
+                    textColor: textColor,
+                    iconBgColor: iconBgColor,
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
-            _buildSectionHeader('Support'),
+            _buildSectionHeader('Support', subTextColor),
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.card,
+                color: cardColor,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                border: Border.all(color: borderColor),
+                boxShadow:
+                    isDark
+                        ? []
+                        : [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
               ),
               child: Column(
                 children: [
@@ -119,24 +176,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.help_outline,
                     title: 'FAQ',
                     onTap: () {},
+                    textColor: textColor,
+                    iconBgColor: iconBgColor,
                   ),
-                  _buildDivider(),
+                  _buildDivider(borderColor),
                   _buildListTile(
                     icon: Icons.info_outline,
                     title: 'Terms of service',
                     onTap: () {},
+                    textColor: textColor,
+                    iconBgColor: iconBgColor,
                   ),
-                  _buildDivider(),
+                  _buildDivider(borderColor),
                   _buildListTile(
                     icon: Icons.privacy_tip_outlined,
                     title: 'User policy',
                     onTap: () {},
+                    textColor: textColor,
+                    iconBgColor: iconBgColor,
                   ),
-                  _buildDivider(),
+                  _buildDivider(borderColor),
                   _buildListTile(
                     icon: Icons.people_outline,
                     title: 'My Contact',
                     onTap: () {},
+                    textColor: textColor,
+                    iconBgColor: iconBgColor,
                   ),
                 ],
               ),
@@ -154,7 +219,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFE53935).withOpacity(0.3),
+                    color: const Color(0xFFE53935).withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -193,13 +258,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildProfileSection() {
+  Widget _buildProfileSection(
+    Color cardColor,
+    Color borderColor,
+    Color textColor,
+    Color? subTextColor,
+    Color iconBgColor,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: borderColor),
+        boxShadow:
+            Theme.of(context).brightness == Brightness.light
+                ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+                : [],
       ),
       child: Row(
         children: [
@@ -222,7 +303,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Text(
                   'Your Name',
                   style: GoogleFonts.poppins(
-                    color: Colors.white,
+                    color: textColor,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
@@ -230,10 +311,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 4),
                 Text(
                   '@yourname',
-                  style: GoogleFonts.poppins(
-                    color: Colors.grey[400],
-                    fontSize: 14,
-                  ),
+                  style: GoogleFonts.poppins(color: subTextColor, fontSize: 14),
                 ),
               ],
             ),
@@ -241,21 +319,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: iconBgColor,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.edit_outlined,
-              color: Colors.white,
-              size: 20,
-            ),
+            child: Icon(Icons.edit_outlined, color: textColor, size: 20),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, Color? textColor) {
     return Padding(
       padding: const EdgeInsets.only(left: 12),
       child: Align(
@@ -263,7 +337,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Text(
           title,
           style: GoogleFonts.poppins(
-            color: Colors.grey[500],
+            color: textColor,
             fontSize: 13,
             fontWeight: FontWeight.w500,
             letterSpacing: 0.5,
@@ -273,13 +347,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildDivider() {
-    return Divider(
-      height: 1,
-      color: Colors.white.withOpacity(0.05),
-      indent: 60,
-      endIndent: 0,
-    );
+  Widget _buildDivider(Color color) {
+    return Divider(height: 1, color: color, indent: 60, endIndent: 0);
   }
 
   Widget _buildListTile({
@@ -287,21 +356,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     String? trailingText,
     required VoidCallback onTap,
+    required Color textColor,
+    required Color iconBgColor,
   }) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.08), // Neutral background
+          color: iconBgColor,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: Colors.white, size: 22), // White icon
+        child: Icon(icon, color: textColor, size: 22),
       ),
       title: Text(
         title,
         style: GoogleFonts.poppins(
-          color: Colors.white,
+          color: textColor,
           fontSize: 15,
           fontWeight: FontWeight.w500,
         ),
@@ -329,21 +400,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     required bool value,
     required ValueChanged<bool> onChanged,
+    required Color textColor,
+    required Color iconBgColor,
+    required Color activeTrackColor,
   }) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.08), // Neutral background
+          color: iconBgColor,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: Colors.white, size: 22), // White icon
+        child: Icon(icon, color: textColor, size: 22),
       ),
       title: Text(
         title,
         style: GoogleFonts.poppins(
-          color: Colors.white,
+          color: textColor,
           fontSize: 15,
           fontWeight: FontWeight.w500,
         ),
@@ -354,9 +428,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           value: value,
           onChanged: onChanged,
           activeColor: Colors.white,
-          activeTrackColor: AppColors.primary,
+          activeTrackColor: activeTrackColor,
           inactiveThumbColor: Colors.white,
-          inactiveTrackColor: Colors.grey.withOpacity(0.3),
+          inactiveTrackColor: Colors.grey.withValues(alpha: 0.3),
         ),
       ),
     );

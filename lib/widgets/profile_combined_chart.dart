@@ -11,17 +11,17 @@ class CombinedProfileChart extends StatelessWidget {
       height: 300,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'System Analytics',
             style: TextStyle(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
@@ -30,11 +30,26 @@ class CombinedProfileChart extends StatelessWidget {
           // Legend
           Row(
             children: [
-              _buildLegendItem('Energy (kWh)', AppColors.primary, isBox: true),
+              _buildLegendItem(
+                context,
+                'Energy (kWh)',
+                AppColors.primary,
+                isBox: true,
+              ),
               const SizedBox(width: 12),
-              _buildLegendItem('Power (W)', Colors.white, isBox: false),
+              _buildLegendItem(
+                context,
+                'Power (W)',
+                Theme.of(context).colorScheme.onSurface,
+                isBox: false,
+              ),
               const SizedBox(width: 12),
-              _buildLegendItem('Temp (°C)', AppColors.secondary, isBox: false),
+              _buildLegendItem(
+                context,
+                'Temp (°C)',
+                AppColors.secondary,
+                isBox: false,
+              ),
             ],
           ),
           const SizedBox(height: 24),
@@ -54,8 +69,10 @@ class CombinedProfileChart extends StatelessWidget {
                           showTitles: true,
                           reservedSize: 30,
                           getTitlesWidget: (value, meta) {
-                            const style = TextStyle(
-                              color: Colors.grey,
+                            final style = TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.5),
                               fontSize: 10,
                             );
                             String text;
@@ -99,8 +116,10 @@ class CombinedProfileChart extends StatelessWidget {
                             if (value % 5 != 0) return Container();
                             return Text(
                               '${value.toInt()}',
-                              style: const TextStyle(
-                                color: Colors.grey,
+                              style: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.5),
                                 fontSize: 10,
                               ),
                             );
@@ -126,19 +145,21 @@ class CombinedProfileChart extends StatelessWidget {
                       horizontalInterval: 5,
                       getDrawingHorizontalLine:
                           (value) => FlLine(
-                            color: Colors.white.withValues(alpha: 0.1),
+                            color: Theme.of(
+                              context,
+                            ).dividerColor.withValues(alpha: 0.1),
                             strokeWidth: 1,
                           ),
                     ),
                     borderData: FlBorderData(show: false),
                     barGroups: [
-                      _makeBarGroup(0, 12),
-                      _makeBarGroup(1, 15),
-                      _makeBarGroup(2, 10),
-                      _makeBarGroup(3, 16),
-                      _makeBarGroup(4, 14),
-                      _makeBarGroup(5, 18),
-                      _makeBarGroup(6, 11),
+                      _makeBarGroup(context, 0, 12),
+                      _makeBarGroup(context, 1, 15),
+                      _makeBarGroup(context, 2, 10),
+                      _makeBarGroup(context, 3, 16),
+                      _makeBarGroup(context, 4, 14),
+                      _makeBarGroup(context, 5, 18),
+                      _makeBarGroup(context, 6, 11),
                     ],
                   ),
                 ),
@@ -182,8 +203,10 @@ class CombinedProfileChart extends StatelessWidget {
                             if (value % 5 != 0) return Container();
                             return Text(
                               '${(value * 10).toInt()}W',
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.7),
                                 fontSize: 10,
                               ),
                             );
@@ -208,12 +231,14 @@ class CombinedProfileChart extends StatelessWidget {
                           FlSpot(6, 13.0), // 130W
                         ],
                         isCurved: true,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                         barWidth: 3,
                         dotData: const FlDotData(show: false),
                         belowBarData: BarAreaData(
                           show: true,
-                          color: Colors.white.withValues(alpha: 0.05),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.05),
                         ),
                       ),
                       // Line 2: Temp (Secondary) - Scaled / 5
@@ -243,7 +268,7 @@ class CombinedProfileChart extends StatelessWidget {
     );
   }
 
-  BarChartGroupData _makeBarGroup(int x, double y) {
+  BarChartGroupData _makeBarGroup(BuildContext context, int x, double y) {
     return BarChartGroupData(
       x: x,
       barRods: [
@@ -255,14 +280,21 @@ class CombinedProfileChart extends StatelessWidget {
           backDrawRodData: BackgroundBarChartRodData(
             show: true,
             toY: 20,
-            color: Colors.white.withValues(alpha: 0.05),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.05),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildLegendItem(String label, Color color, {required bool isBox}) {
+  Widget _buildLegendItem(
+    BuildContext context,
+    String label,
+    Color color, {
+    required bool isBox,
+  }) {
     return Row(
       children: [
         Container(
@@ -275,7 +307,15 @@ class CombinedProfileChart extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+        Text(
+          label,
+          style: TextStyle(
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.6),
+            fontSize: 12,
+          ),
+        ),
       ],
     );
   }

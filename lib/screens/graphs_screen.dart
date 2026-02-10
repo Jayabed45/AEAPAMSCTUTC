@@ -64,7 +64,7 @@ class GraphsScreen extends StatelessWidget {
               StatisticChart(
                 title: 'Water Level',
                 unit: '(%)',
-                lineColor: Colors.white,
+                lineColor: Theme.of(context).colorScheme.onSurface,
                 maxY: 60,
                 spots: const [
                   FlSpot(6, 30),
