@@ -165,48 +165,48 @@ class CombinedDashboardCard extends StatelessWidget {
                             PieChartData(
                               startDegreeOffset: 180,
                               sectionsSpace: 0,
-                              centerSpaceRadius: isMobile ? 40 : 50,
+                              centerSpaceRadius: isMobile ? 65 : 70,
                               sections: [
                                 PieChartSectionData(
                                   color: Colors.blueAccent,
                                   value: waterLevel,
                                   title: '',
-                                  radius: isMobile ? 12 : 16,
+                                  radius: isMobile ? 20 : 25,
                                   showTitle: false,
                                 ),
                                 PieChartSectionData(
                                   color: Colors.blueAccent.withOpacity(0.1),
                                   value: 100 - waterLevel,
                                   title: '',
-                                  radius: isMobile ? 12 : 16,
+                                  radius: isMobile ? 20 : 25,
                                   showTitle: false,
                                 ),
                                 PieChartSectionData(
                                   color: Colors.transparent,
                                   value: 100,
                                   title: '',
-                                  radius: isMobile ? 12 : 16,
+                                  radius: isMobile ? 20 : 25,
                                   showTitle: false,
                                 ),
                               ],
                             ),
                           ),
                           Positioned(
-                            top: isMobile ? 60 : 50,
+                            top: isMobile ? 70 : 60,
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
                                   Icons.water_drop,
                                   color: Colors.blueAccent,
-                                  size: isMobile ? 20 : 24,
+                                  size: isMobile ? 24 : 28,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   '${waterLevel.toInt()}%',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: isMobile ? 28 : 36,
+                                    fontSize: isMobile ? 32 : 42,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
