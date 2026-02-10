@@ -14,8 +14,6 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
 
   bool _pauseNotifications = true;
 
@@ -25,16 +23,6 @@ class _SettingsScreenState extends State<SettingsScreen>
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOutQuad),
     );
 
     _animationController.forward();
@@ -83,219 +71,262 @@ class _SettingsScreenState extends State<SettingsScreen>
         ),
         centerTitle: true,
       ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20.0,
-              vertical: 10.0,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+        child: Column(
+          children: [
+            // User Profile Section
+            _buildAnimatedItem(
+              _buildProfileSection(
+                cardColor,
+                borderColor,
+                textColor,
+                subTextColor,
+                iconBgColor,
+              ),
+              0,
             ),
-            child: Column(
-              children: [
-                // User Profile Section
-                _buildProfileSection(
-                  cardColor,
-                  borderColor,
-                  textColor,
-                  subTextColor,
-                  iconBgColor,
-                ),
-                const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-                // Settings Sections
-                _buildSectionHeader('Preferences', subTextColor),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: borderColor),
-                    boxShadow:
-                        isDark
-                            ? []
-                            : [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                  ),
-                  child: Column(
-                    children: [
-                      _buildSwitchTile(
-                        icon: Icons.notifications_outlined,
-                        title: 'Pause notifications',
-                        value: _pauseNotifications,
-                        onChanged:
-                            (value) =>
-                                setState(() => _pauseNotifications = value),
-                        textColor: textColor,
-                        iconBgColor: iconBgColor,
-                        activeTrackColor: AppColors.primary,
-                      ),
-                      _buildDivider(borderColor),
-                      _buildListTile(
-                        icon: Icons.tune,
-                        title: 'General settings',
-                        onTap: () {},
-                        textColor: textColor,
-                        iconBgColor: iconBgColor,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                _buildSectionHeader('Appearance & Language', subTextColor),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: borderColor),
-                    boxShadow:
-                        isDark
-                            ? []
-                            : [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                  ),
-                  child: Column(
-                    children: [
-                      _buildSwitchTile(
-                        icon: Icons.dark_mode_outlined,
-                        title: 'Dark mode',
-                        value: isDark,
-                        onChanged: (value) => themeProvider.toggleTheme(value),
-                        textColor: textColor,
-                        iconBgColor: iconBgColor,
-                        activeTrackColor: AppColors.primary,
-                      ),
-                      _buildDivider(borderColor),
-                      _buildListTile(
-                        icon: Icons.translate,
-                        title: 'Language',
-                        trailingText: 'English',
-                        onTap: () {},
-                        textColor: textColor,
-                        iconBgColor: iconBgColor,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                _buildSectionHeader('Support', subTextColor),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: borderColor),
-                    boxShadow:
-                        isDark
-                            ? []
-                            : [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                  ),
-                  child: Column(
-                    children: [
-                      _buildListTile(
-                        icon: Icons.help_outline,
-                        title: 'FAQ',
-                        onTap: () {},
-                        textColor: textColor,
-                        iconBgColor: iconBgColor,
-                      ),
-                      _buildDivider(borderColor),
-                      _buildListTile(
-                        icon: Icons.info_outline,
-                        title: 'Terms of service',
-                        onTap: () {},
-                        textColor: textColor,
-                        iconBgColor: iconBgColor,
-                      ),
-                      _buildDivider(borderColor),
-                      _buildListTile(
-                        icon: Icons.privacy_tip_outlined,
-                        title: 'User policy',
-                        onTap: () {},
-                        textColor: textColor,
-                        iconBgColor: iconBgColor,
-                      ),
-                      _buildDivider(borderColor),
-                      _buildListTile(
-                        icon: Icons.people_outline,
-                        title: 'My Contact',
-                        onTap: () {},
-                        textColor: textColor,
-                        iconBgColor: iconBgColor,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // Log Out Button
-                Container(
-                  width: double.infinity,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFE53935), Color(0xFFE35D5B)],
+            // Settings Sections
+            _buildAnimatedItem(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionHeader('Preferences', subTextColor),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: borderColor),
+                      boxShadow:
+                          isDark
+                              ? []
+                              : [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                     ),
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFE53935).withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Column(
                       children: [
-                        const Icon(Icons.logout, color: Colors.white),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Log Out',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                        _buildSwitchTile(
+                          icon: Icons.notifications_outlined,
+                          title: 'Pause notifications',
+                          value: _pauseNotifications,
+                          onChanged:
+                              (value) =>
+                                  setState(() => _pauseNotifications = value),
+                          textColor: textColor,
+                          iconBgColor: iconBgColor,
+                          activeTrackColor: AppColors.primary,
+                        ),
+                        _buildDivider(borderColor),
+                        _buildListTile(
+                          icon: Icons.tune,
+                          title: 'General settings',
+                          onTap: () {},
+                          textColor: textColor,
+                          iconBgColor: iconBgColor,
                         ),
                       ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 30),
-              ],
+                ],
+              ),
+              1,
             ),
+            const SizedBox(height: 24),
+
+            _buildAnimatedItem(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionHeader('Appearance & Language', subTextColor),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: borderColor),
+                      boxShadow:
+                          isDark
+                              ? []
+                              : [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                    ),
+                    child: Column(
+                      children: [
+                        _buildSwitchTile(
+                          icon: Icons.dark_mode_outlined,
+                          title: 'Dark mode',
+                          value: isDark,
+                          onChanged:
+                              (value) => themeProvider.toggleTheme(value),
+                          textColor: textColor,
+                          iconBgColor: iconBgColor,
+                          activeTrackColor: AppColors.primary,
+                        ),
+                        _buildDivider(borderColor),
+                        _buildListTile(
+                          icon: Icons.translate,
+                          title: 'Language',
+                          trailingText: 'English',
+                          onTap: () {},
+                          textColor: textColor,
+                          iconBgColor: iconBgColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              2,
+            ),
+            const SizedBox(height: 24),
+
+            _buildAnimatedItem(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionHeader('Support', subTextColor),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: borderColor),
+                      boxShadow:
+                          isDark
+                              ? []
+                              : [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                    ),
+                    child: Column(
+                      children: [
+                        _buildListTile(
+                          icon: Icons.help_outline,
+                          title: 'FAQ',
+                          onTap: () {},
+                          textColor: textColor,
+                          iconBgColor: iconBgColor,
+                        ),
+                        _buildDivider(borderColor),
+                        _buildListTile(
+                          icon: Icons.info_outline,
+                          title: 'Terms of service',
+                          onTap: () {},
+                          textColor: textColor,
+                          iconBgColor: iconBgColor,
+                        ),
+                        _buildDivider(borderColor),
+                        _buildListTile(
+                          icon: Icons.privacy_tip_outlined,
+                          title: 'User policy',
+                          onTap: () {},
+                          textColor: textColor,
+                          iconBgColor: iconBgColor,
+                        ),
+                        _buildDivider(borderColor),
+                        _buildListTile(
+                          icon: Icons.people_outline,
+                          title: 'My Contact',
+                          onTap: () {},
+                          textColor: textColor,
+                          iconBgColor: iconBgColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              3,
+            ),
+            const SizedBox(height: 40),
+
+            // Log Out Button
+            _buildAnimatedItem(
+              Container(
+                width: double.infinity,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFE53935), Color(0xFFE35D5B)],
+                  ),
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFE53935).withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.logout, color: Colors.white),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Log Out',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              4,
+            ),
+            const SizedBox(height: 30),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnimatedItem(Widget child, int index) {
+    return FadeTransition(
+      opacity: CurvedAnimation(
+        parent: _animationController,
+        curve: Interval(index * 0.1, 1.0, curve: Curves.easeOut),
+      ),
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.2),
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Interval(index * 0.1, 1.0, curve: Curves.easeOutQuad),
           ),
         ),
+        child: child,
       ),
     );
   }

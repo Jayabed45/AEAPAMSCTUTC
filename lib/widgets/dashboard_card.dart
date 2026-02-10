@@ -97,13 +97,23 @@ class DashboardCard extends StatelessWidget {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
-                    child: Text(
-                      value,
-                      style: TextStyle(
-                        fontSize: isSmall ? 20 : 24, // Increased size
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween<double>(
+                        begin: 0,
+                        end: _extractNumber(value),
                       ),
+                      duration: const Duration(seconds: 2),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, animatedValue, child) {
+                        return Text(
+                          _formatValue(animatedValue, value),
+                          style: TextStyle(
+                            fontSize: isSmall ? 20 : 24, // Increased size
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -143,5 +153,26 @@ class DashboardCard extends StatelessWidget {
         );
       },
     );
+  }
+
+  double _extractNumber(String value) {
+    final match = RegExp(r'([\d\.]+)').firstMatch(value);
+    if (match != null) {
+      return double.tryParse(match.group(1)!) ?? 0.0;
+    }
+    return 0.0;
+  }
+
+  String _formatValue(double value, String original) {
+    final match = RegExp(r'([\d\.]+)').firstMatch(original);
+    if (match == null) return original;
+    final numStr = match.group(1)!;
+    int decimals = 0;
+    if (numStr.contains('.')) {
+      decimals = numStr.split('.')[1].length;
+    }
+    final prefix = original.substring(0, match.start);
+    final suffix = original.substring(match.end);
+    return '$prefix${value.toStringAsFixed(decimals)}$suffix';
   }
 }

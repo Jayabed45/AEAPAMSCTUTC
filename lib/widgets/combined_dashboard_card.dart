@@ -168,79 +168,90 @@ class CombinedDashboardCard extends StatelessWidget {
                   // Gauge
                   Expanded(
                     flex: isSmall ? 0 : 2,
-                    child: SizedBox(
-                      height: 180,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          PieChart(
-                            PieChartData(
-                              startDegreeOffset: 180,
-                              sectionsSpace: 0,
-                              centerSpaceRadius: isMobile ? 65 : 70,
-                              sections: [
-                                PieChartSectionData(
-                                  color: AppColors.primary,
-                                  value: waterLevel,
-                                  title: '',
-                                  radius: isMobile ? 20 : 25,
-                                  showTitle: false,
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween<double>(begin: 0, end: waterLevel),
+                      duration: const Duration(seconds: 2),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, animatedWaterLevel, child) {
+                        return SizedBox(
+                          height: 180,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              PieChart(
+                                PieChartData(
+                                  startDegreeOffset: 180,
+                                  sectionsSpace: 0,
+                                  centerSpaceRadius: isMobile ? 65 : 70,
+                                  sections: [
+                                    PieChartSectionData(
+                                      color: AppColors.primary,
+                                      value: animatedWaterLevel,
+                                      title: '',
+                                      radius: isMobile ? 20 : 25,
+                                      showTitle: false,
+                                    ),
+                                    PieChartSectionData(
+                                      color: AppColors.primary.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      value: 100 - animatedWaterLevel,
+                                      title: '',
+                                      radius: isMobile ? 20 : 25,
+                                      showTitle: false,
+                                    ),
+                                    PieChartSectionData(
+                                      color: Colors.transparent,
+                                      value: 100,
+                                      title: '',
+                                      radius: isMobile ? 20 : 25,
+                                      showTitle: false,
+                                    ),
+                                  ],
                                 ),
-                                PieChartSectionData(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.1,
-                                  ),
-                                  value: 100 - waterLevel,
-                                  title: '',
-                                  radius: isMobile ? 20 : 25,
-                                  showTitle: false,
+                              ),
+                              Positioned(
+                                top: isMobile ? 70 : 60,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.water_drop,
+                                      color:
+                                          Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
+                                      size: isMobile ? 24 : 28,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${animatedWaterLevel.toInt()}%',
+                                      style: TextStyle(
+                                        color:
+                                            Theme.of(
+                                              context,
+                                            ).colorScheme.onSurface,
+                                        fontSize: isMobile ? 32 : 42,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Water Level',
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.6),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                PieChartSectionData(
-                                  color: Colors.transparent,
-                                  value: 100,
-                                  title: '',
-                                  radius: isMobile ? 20 : 25,
-                                  showTitle: false,
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                          Positioned(
-                            top: isMobile ? 70 : 60,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.water_drop,
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
-                                  size: isMobile ? 24 : 28,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${waterLevel.toInt()}%',
-                                  style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.onSurface,
-                                    fontSize: isMobile ? 32 : 42,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  'Water Level',
-                                  style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.6),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -334,13 +345,20 @@ class CombinedDashboardCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: TextStyle(
-                    color: valueColor,
-                    fontSize: isMobile ? 18 : 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+                TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0, end: _extractNumber(value)),
+                  duration: const Duration(seconds: 2),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, animatedValue, child) {
+                    return Text(
+                      _formatValue(animatedValue, value),
+                      style: TextStyle(
+                        color: valueColor,
+                        fontSize: isMobile ? 18 : 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -348,6 +366,27 @@ class CombinedDashboardCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  double _extractNumber(String value) {
+    final match = RegExp(r'([\d\.]+)').firstMatch(value);
+    if (match != null) {
+      return double.tryParse(match.group(1)!) ?? 0.0;
+    }
+    return 0.0;
+  }
+
+  String _formatValue(double value, String original) {
+    final match = RegExp(r'([\d\.]+)').firstMatch(original);
+    if (match == null) return original;
+    final numStr = match.group(1)!;
+    int decimals = 0;
+    if (numStr.contains('.')) {
+      decimals = numStr.split('.')[1].length;
+    }
+    final prefix = original.substring(0, match.start);
+    final suffix = original.substring(match.end);
+    return '$prefix${value.toStringAsFixed(decimals)}$suffix';
   }
 
   Widget _buildBottomStat(
