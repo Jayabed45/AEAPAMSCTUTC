@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../widgets/statistic_chart.dart';
+import '../widgets/custom_header.dart';
 
 class GraphsScreen extends StatelessWidget {
   const GraphsScreen({super.key});
@@ -8,10 +9,8 @@ class GraphsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Statistics'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      appBar: const CustomHeader(
+        title: Text('Statistics'),
       ),
       body: SafeArea(
         child: SingleChildScrollView(

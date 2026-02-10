@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../widgets/dashboard_card.dart';
 import '../widgets/combined_dashboard_card.dart';
+import '../widgets/custom_header.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -12,40 +13,43 @@ class HomeScreen extends StatelessWidget {
     final formattedDate = DateFormat('EEEE, MMM d, yyyy, hh:mm a').format(now);
 
     return Scaffold(
+      appBar: CustomHeader(
+        height: 80, // Slightly taller for the double-line text
+        title: Row(
+          children: [
+            const Icon(Icons.wb_sunny, color: Colors.orange, size: 40),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Text(
+                    'PV System Tracker',
+                    style: TextStyle(
+                      fontSize: 16, // Reduced slightly to fit
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    'CTU - TC ',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Row(
-                children: [
-                  const Icon(Icons.wb_sunny, color: Colors.orange, size: 40),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          'CTU Tuburan Solar PV Monitoring System',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          'Cebu Techno University - Tuburan Campus',
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
               // Status Bar
               LayoutBuilder(
                 builder: (context, constraints) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/alert_tile.dart';
+import '../widgets/custom_header.dart';
 
 class AlertsScreen extends StatelessWidget {
   const AlertsScreen({super.key});
@@ -7,10 +8,8 @@ class AlertsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Alerts'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      appBar: const CustomHeader(
+        title: Text('Alerts'),
       ),
       body: SafeArea(
         child: Center(
