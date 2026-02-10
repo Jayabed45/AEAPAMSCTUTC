@@ -105,7 +105,7 @@ class HomeScreen extends StatelessWidget {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.green.withValues(alpha: 0.2),
+                                color: Colors.green.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Row(
@@ -160,8 +160,8 @@ class HomeScreen extends StatelessWidget {
                     crossAxisCount = 2;
                     childAspectRatio = 2.0;
                   } else {
-                    crossAxisCount = 1;
-                    childAspectRatio = 1.8;
+                    crossAxisCount = 2;
+                    childAspectRatio = 1.0;
                   }
 
                   return GridView.count(

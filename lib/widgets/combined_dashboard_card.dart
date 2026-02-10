@@ -32,7 +32,7 @@ class CombinedDashboardCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
+                color: Colors.black.withOpacity(0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -73,11 +73,9 @@ class CombinedDashboardCard extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.1),
+                      color: Colors.green.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.green.withValues(alpha: 0.3),
-                      ),
+                      border: Border.all(color: Colors.green.withOpacity(0.3)),
                     ),
                     child: Row(
                       children: [
@@ -177,9 +175,7 @@ class CombinedDashboardCard extends StatelessWidget {
                                   showTitle: false,
                                 ),
                                 PieChartSectionData(
-                                  color: Colors.blueAccent.withValues(
-                                    alpha: 0.1,
-                                  ),
+                                  color: Colors.blueAccent.withOpacity(0.1),
                                   value: 100 - waterLevel,
                                   title: '',
                                   radius: isMobile ? 12 : 16,
@@ -282,7 +278,7 @@ class CombinedDashboardCard extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(isMobile ? 8 : 10),
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.1),
+              color: iconColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: iconColor, size: isMobile ? 20 : 24),
@@ -299,19 +295,14 @@ class CombinedDashboardCard extends StatelessWidget {
                     fontSize: isMobile ? 12 : 13,
                     fontWeight: FontWeight.w500,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: isMobile ? 2 : 4),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    value,
-                    style: TextStyle(
-                      color: valueColor,
-                      fontSize: isMobile ? 18 : 20,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: valueColor,
+                    fontSize: isMobile ? 18 : 22,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
@@ -328,32 +319,27 @@ class CombinedDashboardCard extends StatelessWidget {
     Color color,
     bool isMobile,
   ) {
-    return Expanded(
-      child: Column(
-        children: [
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              value,
-              style: TextStyle(
-                color: color,
-                fontSize: isMobile ? 14 : 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: isMobile ? 10 : 12,
+            fontWeight: FontWeight.w500,
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: isMobile ? 10 : 11,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: isMobile ? 12 : 14,
+            fontWeight: FontWeight.bold,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
