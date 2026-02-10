@@ -3,6 +3,7 @@ import 'screens/home_screen.dart';
 import 'screens/graphs_screen.dart';
 import 'screens/alerts_screen.dart';
 import 'screens/settings_screen.dart';
+import 'widgets/custom_animated_nav_bar.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -31,29 +32,32 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _screens[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.show_chart),
+      bottomNavigationBar: CustomAnimatedNavBar(
+        selectedIndex: _selectedIndex,
+        onItemSelected: _onItemTapped,
+        backgroundColor: Theme.of(context).cardColor,
+        items: [
+          CustomNavBarItem(
+            icon: Icons.home_outlined,
+            selectedIcon: Icons.home,
+            label: 'Home',
+          ),
+          CustomNavBarItem(
+            icon: Icons.show_chart,
+            selectedIcon: Icons.show_chart,
             label: 'Graphs',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
+          CustomNavBarItem(
+            icon: Icons.notifications_outlined,
+            selectedIcon: Icons.notifications,
             label: 'Alerts',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
+          CustomNavBarItem(
+            icon: Icons.settings_outlined,
+            selectedIcon: Icons.settings,
             label: 'Settings',
           ),
         ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        backgroundColor: const Color(0xFF1E1E1E),
-        type: BottomNavigationBarType.fixed,
-        onTap: _onItemTapped,
-        showUnselectedLabels: true,
       ),
     );
   }
