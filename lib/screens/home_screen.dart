@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../widgets/dashboard_card.dart';
+import '../widgets/combined_dashboard_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -114,54 +115,42 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // Cards Grid
+              // Main Combo Card
+              const CombinedDashboardCard(
+                voltage: '34.2 V',
+                current: '5.8 A',
+                power: '198.4 W',
+                temperature: '45.3°C',
+                waterLevel: 82,
+              ),
+
+              const SizedBox(height: 24),
+
+              // Bottom Cards Grid
               LayoutBuilder(
                 builder: (context, constraints) {
                   int crossAxisCount;
                   double childAspectRatio;
 
-                  if (constraints.maxWidth > 600) {
-                    crossAxisCount = 3;
-                    childAspectRatio = 1.3;
+                  if (constraints.maxWidth > 800) {
+                    crossAxisCount = 2;
+                    childAspectRatio = 2.5;
+                  } else if (constraints.maxWidth > 600) {
+                    crossAxisCount = 2;
+                    childAspectRatio = 2.0;
                   } else {
-                    crossAxisCount =
-                        2; // Fallback for very small screens, though user requested 3x3 layout, 3 on mobile is too cramped.
-                    childAspectRatio = 1.1;
+                    crossAxisCount = 1;
+                    childAspectRatio = 1.8;
                   }
 
                   return GridView.count(
                     crossAxisCount: crossAxisCount,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    crossAxisSpacing: 20, // Increased spacing for balance
-                    mainAxisSpacing: 20, // Increased spacing for balance
+                    crossAxisSpacing: 20,
+                    mainAxisSpacing: 20,
                     childAspectRatio: childAspectRatio,
                     children: const [
-                      DashboardCard(
-                        icon: Icons.flash_on,
-                        iconColor: Colors.amber,
-                        value: '34.2 V',
-                        label: 'Voltage',
-                        subLabel: 'Total Check',
-                      ),
-                      DashboardCard(
-                        icon: Icons.electrical_services,
-                        iconColor: Colors.orange,
-                        value: '5.8 A',
-                        label: 'Current',
-                        subLabel: 'Temperature',
-                        statusText: 'Normal',
-                        statusColor: Colors.green,
-                      ),
-                      DashboardCard(
-                        icon: Icons.power,
-                        iconColor: Colors.blue,
-                        value: '198.4 W',
-                        label: 'Power',
-                        subLabel: 'Energy - Save',
-                        statusText: 'Normal',
-                        statusColor: Colors.green,
-                      ),
                       DashboardCard(
                         icon: Icons.bolt,
                         iconColor: Colors.blue,
@@ -178,15 +167,6 @@ class HomeScreen extends StatelessWidget {
                         label: 'Daily Energy',
                         subLabel: 'Hourly Data',
                         statusText: 'Hourly',
-                        statusColor: Colors.green,
-                      ),
-                      DashboardCard(
-                        icon: Icons.water_drop,
-                        iconColor: Colors.blue,
-                        value: '82 %',
-                        label: 'Water Level',
-                        subLabel: 'Daily Today',
-                        statusText: 'Daily',
                         statusColor: Colors.green,
                       ),
                     ],
