@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../widgets/profile_combined_chart.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  int _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -112,9 +119,24 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Expanded(child: _buildTabButton('Analytics', true)),
-                    Expanded(child: _buildTabButton('History', false)),
-                    Expanded(child: _buildTabButton('System', false)),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _selectedIndex = 0),
+                        child: _buildTabButton(
+                          'Analytics',
+                          _selectedIndex == 0,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _selectedIndex = 1),
+                        child: _buildTabButton(
+                          'Profile Info',
+                          _selectedIndex == 1,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -122,15 +144,57 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // Analytics Content
+            // Content
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(children: const [CombinedProfileChart()]),
+              child:
+                  _selectedIndex == 0
+                      ? const CombinedProfileChart()
+                      : _buildProfileInfo(),
             ),
             const SizedBox(height: 32),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildProfileInfo() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: Column(
+        children: [
+          _buildInfoRow('Full name', 'System Admin'),
+          const Divider(color: Colors.white10, height: 24),
+          _buildInfoRow('Phone number', '+63 912 345 6789'),
+          const Divider(color: Colors.white10, height: 24),
+          _buildInfoRow('Email', 'admin@aeapams.edu.ph'),
+          const Divider(color: Colors.white10, height: 24),
+          _buildInfoRow('Username', '@sysadmin_main'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+            fontSize: 14,
+          ),
+        ),
+      ],
     );
   }
 
