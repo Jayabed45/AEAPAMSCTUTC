@@ -34,7 +34,10 @@ class NotificationItem extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(24),
                   ),
-                  border: Border.all(color: Theme.of(context).dividerColor),
+                  border:
+                      Theme.of(context).brightness == Brightness.dark
+                          ? null
+                          : Border.all(color: Theme.of(context).dividerColor),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -45,10 +48,16 @@ class NotificationItem extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: iconBackgroundColor ?? Theme.of(context).cardColor,
+                            color:
+                                iconBackgroundColor ??
+                                Theme.of(context).cardColor,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(icon, color: Theme.of(context).colorScheme.onSurface, size: 24),
+                          child: Icon(
+                            icon,
+                            color: Theme.of(context).colorScheme.onSurface,
+                            size: 24,
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -58,7 +67,8 @@ class NotificationItem extends StatelessWidget {
                               Text(
                                 title,
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -66,7 +76,8 @@ class NotificationItem extends StatelessWidget {
                               Text(
                                 time,
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.5),
                                   fontSize: 14,
                                 ),
                               ),
@@ -121,9 +132,15 @@ class NotificationItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: Theme.of(context).dividerColor, width: 1),
-          ),
+          border:
+              Theme.of(context).brightness == Brightness.dark
+                  ? null
+                  : Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context).dividerColor,
+                      width: 1,
+                    ),
+                  ),
         ),
         child: Row(
           children: [
@@ -133,7 +150,11 @@ class NotificationItem extends StatelessWidget {
                 color: iconBackgroundColor ?? Theme.of(context).cardColor,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: Theme.of(context).colorScheme.onSurface, size: 24),
+              child: Icon(
+                icon,
+                color: Theme.of(context).colorScheme.onSurface,
+                size: 24,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -152,7 +173,9 @@ class NotificationItem extends StatelessWidget {
                   Text(
                     time,
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.5),
                       fontSize: 14,
                     ),
                   ),
