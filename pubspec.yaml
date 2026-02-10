@@ -39,6 +39,7 @@ dependencies:
   intl: ^0.20.2
   vector_math: ^2.1.4
   provider: ^6.1.5+1
+  flutter_slidable: ^4.0.3
 
 dependency_overrides:
   vector_math: ^2.1.5
