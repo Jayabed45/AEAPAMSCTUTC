@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/graphs_screen.dart';
 import 'screens/alerts_screen.dart';
+import 'screens/settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -17,7 +18,7 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const GraphsScreen(),
     const AlertsScreen(),
-    const Center(child: Text('Settings Screen')), // Placeholder
+    const SettingsScreen(),
   ];
 
   void _onItemTapped(int index) {

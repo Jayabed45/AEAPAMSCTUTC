@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../constants/app_colors.dart';
 
 class CombinedDashboardCard extends StatelessWidget {
   final String voltage;
@@ -7,6 +8,7 @@ class CombinedDashboardCard extends StatelessWidget {
   final String power;
   final String temperature;
   final double waterLevel; // 0 to 100
+  final String title;
 
   const CombinedDashboardCard({
     super.key,
@@ -15,6 +17,7 @@ class CombinedDashboardCard extends StatelessWidget {
     required this.power,
     required this.temperature,
     required this.waterLevel,
+    required this.title,
   });
 
   @override
@@ -28,8 +31,9 @@ class CombinedDashboardCard extends StatelessWidget {
         return Container(
           padding: EdgeInsets.all(isMobile ? 16 : 24),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E1E1E),
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withOpacity(0.05)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.3),
@@ -51,7 +55,7 @@ class CombinedDashboardCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Real-Time Monitoring',
+                          title,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: isMobile ? 18 : 20,
@@ -61,7 +65,7 @@ class CombinedDashboardCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         const Text(
-                          'Live data from sensors',
+                          'Real-Time Monitoring',
                           style: TextStyle(color: Colors.grey, fontSize: 12),
                         ),
                       ],

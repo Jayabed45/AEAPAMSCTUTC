@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'constants/app_colors.dart';
 import 'main_screen.dart';
 
 void main() {
@@ -17,16 +18,23 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF121212),
+        scaffoldBackgroundColor: AppColors.background,
         colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF2196F3),
-          secondary: Color(0xFFFFD700),
-          surface: Color(0xFF1E1E1E),
+          primary: AppColors.primary,
+          secondary: AppColors.secondary,
+          surface: AppColors.surface,
+          onSurface: AppColors.text,
+          background: AppColors.background,
+        ),
+        cardColor: AppColors.surface,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.background,
+          elevation: 0,
         ),
         textTheme: GoogleFonts.interTextTheme(
           Theme.of(context).textTheme.apply(
-            bodyColor: Colors.white,
-            displayColor: Colors.white,
+            bodyColor: AppColors.text,
+            displayColor: AppColors.text,
           ),
         ),
       ),

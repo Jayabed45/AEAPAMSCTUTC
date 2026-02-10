@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
 
 class DashboardCard extends StatelessWidget {
   final IconData icon;
@@ -33,8 +34,9 @@ class DashboardCard extends StatelessWidget {
         return Container(
           padding: EdgeInsets.all(padding),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E1E1E),
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withOpacity(0.05)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,10 +49,10 @@ class DashboardCard extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.all(iconPadding),
                     decoration: BoxDecoration(
-                      color: iconColor.withOpacity(0.2),
+                      color: AppColors.primary.withOpacity(0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(icon, color: iconColor, size: iconSize),
+                    child: Icon(icon, color: Colors.white, size: iconSize),
                   ),
                   if (statusText != null)
                     Flexible(

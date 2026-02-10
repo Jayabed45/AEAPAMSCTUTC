@@ -1,23 +1,57 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../widgets/dashboard_card.dart';
 import '../widgets/combined_dashboard_card.dart';
 import '../widgets/custom_header.dart';
+import '../constants/app_colors.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final formattedDate = DateFormat('EEEE, MMM d, yyyy, hh:mm a').format(now);
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
+class _HomeScreenState extends State<HomeScreen> {
+  late String _formattedDate;
+  late Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _formattedDate = DateFormat(
+      'EEEE, MMM d, yyyy, hh:mm a',
+    ).format(DateTime.now());
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      _updateTime();
+    });
+  }
+
+  void _updateTime() {
+    if (mounted) {
+      final now = DateTime.now();
+      setState(() {
+        _formattedDate = DateFormat('EEEE, MMM d, yyyy, hh:mm a').format(now);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: CustomHeader(
-        height: 80, // Slightly taller for the double-line text
+        height: 80,
         title: Row(
           children: [
-            const Icon(Icons.wb_sunny, color: Colors.orange, size: 40),
+            const Icon(Icons.wb_sunny, color: Colors.white, size: 40),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -27,7 +61,7 @@ class HomeScreen extends StatelessWidget {
                   Text(
                     'PV System Tracker',
                     style: TextStyle(
-                      fontSize: 16, // Reduced slightly to fit
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
@@ -35,7 +69,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                   Text(
                     'CTU - TC ',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    style: TextStyle(fontSize: 12, color: AppColors.secondary),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
@@ -50,88 +84,50 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Status Bar
+              // Status Bar - Only System Status now
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final isSmall = constraints.maxWidth < 600;
                   return Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E1E),
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white.withOpacity(0.05)),
                     ),
-                    child: Flex(
-                      direction: isSmall ? Axis.vertical : Axis.horizontal,
-                      mainAxisAlignment:
-                          isSmall
-                              ? MainAxisAlignment.center
-                              : MainAxisAlignment.spaceBetween,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          mainAxisAlignment:
-                              isSmall
-                                  ? MainAxisAlignment.center
-                                  : MainAxisAlignment.start,
-                          children: [
-                            const Icon(
-                              Icons.access_time,
-                              color: Colors.amber,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              formattedDate,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+                        const Text(
+                          'System Status',
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
                         ),
-                        if (isSmall) const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment:
-                              isSmall
-                                  ? MainAxisAlignment.center
-                                  : MainAxisAlignment.end,
-                          children: [
-                            const Text(
-                              'System Status',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Row(
+                            children: [
+                              Text(
+                                'Normal',
+                                style: TextStyle(
+                                  color: Colors.green,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 4,
+                              SizedBox(width: 4),
+                              Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                                size: 12,
                               ),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Row(
-                                children: [
-                                  Text(
-                                    'Normal',
-                                    style: TextStyle(
-                                      color: Colors.green,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                  Icon(
-                                    Icons.check_circle,
-                                    color: Colors.green,
-                                    size: 12,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -140,8 +136,9 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // Main Combo Card
-              const CombinedDashboardCard(
+              // Main Combo Card with Time
+              CombinedDashboardCard(
+                title: _formattedDate,
                 voltage: '34.2 V',
                 current: '5.8 A',
                 power: '198.4 W',
@@ -178,7 +175,7 @@ class HomeScreen extends StatelessWidget {
                     children: const [
                       DashboardCard(
                         icon: Icons.bolt,
-                        iconColor: Colors.blue,
+                        iconColor: Colors.white,
                         value: '0.21 kWh',
                         label: 'Energy Hour',
                         subLabel: 'Water Data',
@@ -187,7 +184,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       DashboardCard(
                         icon: Icons.link,
-                        iconColor: Colors.blue,
+                        iconColor: Colors.white,
                         value: '3.68 kWh',
                         label: 'Daily Energy',
                         subLabel: 'Hourly Data',
