@@ -13,9 +13,13 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   late String _formattedDate;
   late Timer _timer;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
@@ -23,6 +27,26 @@ class _HomeScreenState extends State<HomeScreen> {
     _formattedDate = DateFormat(
       'EEEE, MMM d, yyyy, hh:mm a',
     ).format(DateTime.now());
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutQuad),
+    );
+
+    _animationController.forward();
+
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       _updateTime();
     });
@@ -40,6 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _timer.cancel();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -88,69 +113,75 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Main Combo Card with Time
-              CombinedDashboardCard(
-                title: _formattedDate,
-                voltage: '34.2 V',
-                current: '5.8 A',
-                power: '198.4 W',
-                temperature: '45.3°C',
-                waterLevel: 82,
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Main Combo Card with Time
+                  CombinedDashboardCard(
+                    title: _formattedDate,
+                    voltage: '34.2 V',
+                    current: '5.8 A',
+                    power: '198.4 W',
+                    temperature: '45.3°C',
+                    waterLevel: 82,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Bottom Cards Grid
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      int crossAxisCount;
+                      double childAspectRatio;
+
+                      if (constraints.maxWidth > 800) {
+                        crossAxisCount = 2;
+                        childAspectRatio = 2.5;
+                      } else if (constraints.maxWidth > 600) {
+                        crossAxisCount = 2;
+                        childAspectRatio = 2.0;
+                      } else {
+                        crossAxisCount = 2;
+                        childAspectRatio = 1.0;
+                      }
+
+                      return GridView.count(
+                        crossAxisCount: crossAxisCount,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisSpacing: 20,
+                        mainAxisSpacing: 20,
+                        childAspectRatio: childAspectRatio,
+                        children: const [
+                          DashboardCard(
+                            icon: Icons.bolt,
+                            iconColor: Colors.white,
+                            value: '0.21 kWh',
+                            label: 'Energy Hour',
+                            subLabel: 'Water Data',
+                            statusText: 'Normal',
+                            statusColor: Colors.green,
+                          ),
+                          DashboardCard(
+                            icon: Icons.link,
+                            iconColor: Colors.white,
+                            value: '3.68 kWh',
+                            label: 'Daily Energy',
+                            subLabel: 'Hourly Data',
+                            statusText: 'Hourly',
+                            statusColor: Colors.green,
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
               ),
-
-              const SizedBox(height: 24),
-
-              // Bottom Cards Grid
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  int crossAxisCount;
-                  double childAspectRatio;
-
-                  if (constraints.maxWidth > 800) {
-                    crossAxisCount = 2;
-                    childAspectRatio = 2.5;
-                  } else if (constraints.maxWidth > 600) {
-                    crossAxisCount = 2;
-                    childAspectRatio = 2.0;
-                  } else {
-                    crossAxisCount = 2;
-                    childAspectRatio = 1.0;
-                  }
-
-                  return GridView.count(
-                    crossAxisCount: crossAxisCount,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisSpacing: 20,
-                    mainAxisSpacing: 20,
-                    childAspectRatio: childAspectRatio,
-                    children: const [
-                      DashboardCard(
-                        icon: Icons.bolt,
-                        iconColor: Colors.white,
-                        value: '0.21 kWh',
-                        label: 'Energy Hour',
-                        subLabel: 'Water Data',
-                        statusText: 'Normal',
-                        statusColor: Colors.green,
-                      ),
-                      DashboardCard(
-                        icon: Icons.link,
-                        iconColor: Colors.white,
-                        value: '3.68 kWh',
-                        label: 'Daily Energy',
-                        subLabel: 'Hourly Data',
-                        statusText: 'Hourly',
-                        statusColor: Colors.green,
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ],
+            ),
           ),
         ),
       ),
