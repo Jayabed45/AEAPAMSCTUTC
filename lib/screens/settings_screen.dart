@@ -21,7 +21,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.white,
+            size: 20,
+          ),
           onPressed: () {
             Navigator.of(context).pop();
           },
@@ -49,8 +53,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: AppColors.card,
                 borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
               ),
               child: Column(
                 children: [
@@ -58,7 +63,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.notifications_outlined,
                     title: 'Pause notifications',
                     value: _pauseNotifications,
-                    onChanged: (value) => setState(() => _pauseNotifications = value),
+                    onChanged:
+                        (value) => setState(() => _pauseNotifications = value),
                   ),
                   _buildDivider(),
                   _buildListTile(
@@ -75,8 +81,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: AppColors.card,
                 borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
               ),
               child: Column(
                 children: [
@@ -102,8 +109,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: AppColors.card,
                 borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
               ),
               child: Column(
                 children: [
@@ -125,7 +133,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onTap: () {},
                   ),
                   _buildDivider(),
-                   _buildListTile(
+                  _buildListTile(
                     icon: Icons.people_outline,
                     title: 'My Contact',
                     onTap: () {},
@@ -189,7 +197,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.white.withOpacity(0.05)),
       ),
@@ -236,7 +244,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: Colors.white.withOpacity(0.05),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.edit_outlined, color: Colors.white, size: 20),
+            child: const Icon(
+              Icons.edit_outlined,
+              color: Colors.white,
+              size: 20,
+            ),
           ),
         ],
       ),
@@ -302,10 +314,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.only(right: 8.0),
               child: Text(
                 trailingText,
-                style: GoogleFonts.poppins(
-                  color: Colors.grey,
-                  fontSize: 13,
-                ),
+                style: GoogleFonts.poppins(color: Colors.grey, fontSize: 13),
               ),
             ),
           const Icon(Icons.chevron_right, color: Colors.grey, size: 20),

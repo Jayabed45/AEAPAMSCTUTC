@@ -31,7 +31,7 @@ class CombinedDashboardCard extends StatelessWidget {
         return Container(
           padding: EdgeInsets.all(isMobile ? 16 : 24),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.card,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: Colors.white.withOpacity(0.05)),
             boxShadow: [
@@ -66,7 +66,10 @@ class CombinedDashboardCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         const Text(
                           'Real-Time Monitoring',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                          style: TextStyle(
+                            color: AppColors.secondary,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
