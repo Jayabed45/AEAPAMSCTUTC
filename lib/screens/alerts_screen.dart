@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../widgets/alert_tile.dart';
+import '../widgets/notification_item.dart';
 import '../widgets/custom_header.dart';
+import '../constants/app_colors.dart';
 
 class AlertsScreen extends StatelessWidget {
   const AlertsScreen({super.key});
@@ -8,69 +9,51 @@ class AlertsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: const CustomHeader(
-        title: Text('Alerts'),
+        title: Text('Notification'),
       ),
       body: SafeArea(
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 800), // Limit width on large screens
-            padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E1E1E),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: const [
-                        Icon(Icons.warning_amber, color: Colors.amber),
-                        SizedBox(width: 8),
-                        Text(
-                          'ALERTS',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Spacer(),
-                        Icon(Icons.more_horiz, color: Colors.grey),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const AlertTile(
-                      icon: Icons.water_drop,
-                      iconColor: Colors.red,
-                      title: 'Water level is low. Take action as soon as possible.',
-                      description: '',
-                      badgeText: 'Critical',
-                      badgeColor: Colors.red,
-                      time: '5 minutes ago',
-                      subInfoLabel: 'Water Level',
-                      subInfoValue: '15%',
-                      subInfoValueColor: Colors.red,
-                    ),
-                    const Divider(color: Colors.white10),
-                    const SizedBox(height: 12),
-                    const AlertTile(
-                      icon: Icons.thermostat,
-                      iconColor: Colors.orange,
-                      title: 'Temperature exceeds safe limit. Reduce load or',
-                      description: '',
-                      badgeText: 'Warning',
-                      badgeColor: Colors.orange,
-                      time: '15 minutes ago',
-                      subInfoLabel: 'Temperature',
-                      subInfoValue: '45.3°C',
-                      subInfoValueColor: Colors.orange,
-                    ),
-                  ],
-                ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Column(
+            children: [
+              NotificationItem(
+                icon: Icons.warning_amber_rounded,
+                title: 'Overvoltage Warning',
+                time: 'Today | 03:23 AM',
+                isUnread: true,
+                iconBackgroundColor: AppColors.primary.withOpacity(0.15),
               ),
-            ),
+              NotificationItem(
+                icon: Icons.thermostat_rounded,
+                title: 'High Temperature Alert',
+                time: 'Today | 05:23 PM',
+                isUnread: false,
+                iconBackgroundColor: AppColors.secondary.withOpacity(0.15),
+              ),
+              NotificationItem(
+                icon: Icons.check_circle_outline_rounded,
+                title: 'System Connected',
+                time: 'Friday | 05:00 PM',
+                isUnread: false,
+                iconBackgroundColor: Colors.white.withOpacity(0.1),
+              ),
+              NotificationItem(
+                icon: Icons.system_update_rounded,
+                title: 'Firmware Update Available',
+                time: '12 Dec 2024 | 04:00 PM',
+                isUnread: false,
+                iconBackgroundColor: Colors.orange.withOpacity(0.15),
+              ),
+              NotificationItem(
+                icon: Icons.water_drop_rounded,
+                title: 'Water Level Critical',
+                time: '02 Dec 2024 | 02:00 PM',
+                isUnread: false,
+                iconBackgroundColor: Colors.blue.withOpacity(0.15),
+              ),
+            ],
           ),
         ),
       ),

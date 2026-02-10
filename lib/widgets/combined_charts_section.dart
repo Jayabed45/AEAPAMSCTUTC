@@ -17,123 +17,201 @@ class CombinedChartsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'System Overview',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'System Overview',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _buildLegendItem('Voltage', AppColors.primary),
+                      const SizedBox(width: 12),
+                      _buildLegendItem('Current', Colors.white),
+                      const SizedBox(width: 12),
+                      _buildLegendItem('Energy', AppColors.secondary),
+                    ],
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 24),
-          _buildSingleChart('Voltage (V)', AppColors.primary, 40, [
-            const FlSpot(6, 20),
-            const FlSpot(7, 22),
-            const FlSpot(8, 28),
-            const FlSpot(9, 35),
-            const FlSpot(10, 34),
-          ]),
-          const SizedBox(height: 24),
-          _buildSingleChart('Current (A)', Colors.white, 6, [
-            const FlSpot(6, 2),
-            const FlSpot(7, 3),
-            const FlSpot(8, 3),
-            const FlSpot(9, 4),
-            const FlSpot(10, 3.5),
-          ]),
-          const SizedBox(height: 24),
-          _buildSingleChart('Energy (kWh)', AppColors.secondary, 0.4, [
-            const FlSpot(6, 0.1),
-            const FlSpot(7, 0.12),
-            const FlSpot(8, 0.15),
-            const FlSpot(9, 0.25),
-            const FlSpot(10, 0.22),
-          ]),
+          SizedBox(
+            height: 250,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine:
+                      (value) => FlLine(
+                        color: Colors.white.withOpacity(0.05),
+                        strokeWidth: 1,
+                      ),
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 22,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        if (value % 1 == 0) {
+                          return Text(
+                            '${value.toInt()}h',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.3),
+                              fontSize: 10,
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 10,
+                      reservedSize: 32,
+                      getTitlesWidget: (value, meta) {
+                        return Text(
+                          value.toInt().toString(),
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.3),
+                            fontSize: 10,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                minX: 6,
+                maxX: 10,
+                minY: 0,
+                maxY: 45, // Accommodate max voltage (~35)
+                lineBarsData: [
+                  // Voltage (Yellow)
+                  LineChartBarData(
+                    spots: const [
+                      FlSpot(6, 20),
+                      FlSpot(7, 22),
+                      FlSpot(8, 28),
+                      FlSpot(9, 35),
+                      FlSpot(10, 34),
+                    ],
+                    isCurved: true,
+                    color: AppColors.primary,
+                    barWidth: 3,
+                    isStrokeCapRound: true,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: AppColors.primary.withOpacity(0.1),
+                    ),
+                  ),
+                  // Current (White) - Scaled x5 for visibility?
+                  // User asked to combine, but raw values (3-4) will be very low on 0-40 scale.
+                  // I will plot raw values as requested, but maybe add a note or separate axis in future.
+                  // For now, I will plot raw to be accurate to the data, even if visually small.
+                  // Actually, let's stick to raw values to be correct.
+                  LineChartBarData(
+                    spots: const [
+                      FlSpot(6, 2),
+                      FlSpot(7, 3),
+                      FlSpot(8, 3),
+                      FlSpot(9, 4),
+                      FlSpot(10, 3.5),
+                    ],
+                    isCurved: true,
+                    color: Colors.white,
+                    barWidth: 3,
+                    isStrokeCapRound: true,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(show: false),
+                  ),
+                  // Energy (Light Yellow) - Raw values (0.1-0.2)
+                  LineChartBarData(
+                    spots: const [
+                      FlSpot(6, 0.1),
+                      FlSpot(7, 0.12),
+                      FlSpot(8, 0.15),
+                      FlSpot(9, 0.25),
+                      FlSpot(10, 0.22),
+                    ],
+                    isCurved: true,
+                    color: AppColors.secondary,
+                    barWidth: 3,
+                    isStrokeCapRound: true,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(show: false),
+                  ),
+                ],
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipColor: (touchedSpot) => AppColors.surface,
+                    getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+                      return touchedBarSpots.map((barSpot) {
+                        final flSpot = barSpot;
+                        String unit = '';
+                        Color textColor = barSpot.bar.color ?? Colors.white;
+
+                        // Identify series by color or index
+                        if (barSpot.barIndex == 0)
+                          unit = 'V';
+                        else if (barSpot.barIndex == 1)
+                          unit = 'A';
+                        else if (barSpot.barIndex == 2)
+                          unit = 'kWh';
+
+                        return LineTooltipItem(
+                          '${flSpot.y} $unit',
+                          TextStyle(
+                            color: textColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      }).toList();
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSingleChart(String title, Color color, double maxY, List<FlSpot> spots) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildLegendItem(String label, Color color) {
+    return Row(
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            color: color,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 120,
-          child: LineChart(
-            LineChartData(
-              gridData: FlGridData(
-                show: true,
-                drawVerticalLine: false,
-                getDrawingHorizontalLine: (value) => FlLine(
-                  color: Colors.white.withOpacity(0.05),
-                  strokeWidth: 1,
-                ),
-              ),
-              titlesData: FlTitlesData(
-                show: true,
-                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 22,
-                    interval: 1,
-                    getTitlesWidget: (value, meta) {
-                      if (value % 1 == 0) {
-                        return Text(
-                          '${value.toInt()}h',
-                          style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 10),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: maxY / 2,
-                    reservedSize: 32,
-                    getTitlesWidget: (value, meta) {
-                      return Text(
-                        value >= 1 ? value.toInt().toString() : value.toStringAsFixed(1),
-                        style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 10),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              borderData: FlBorderData(show: false),
-              minX: 6,
-              maxX: 10,
-              minY: 0,
-              maxY: maxY,
-              lineBarsData: [
-                LineChartBarData(
-                  spots: spots,
-                  isCurved: true,
-                  color: color,
-                  barWidth: 2,
-                  isStrokeCapRound: true,
-                  dotData: const FlDotData(show: false),
-                  belowBarData: BarAreaData(
-                    show: true,
-                    color: color.withOpacity(0.1),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
         ),
       ],
     );

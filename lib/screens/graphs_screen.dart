@@ -20,79 +20,59 @@ class GraphsScreen extends StatelessWidget {
             children: [
               const CombinedChartsSection(),
               const SizedBox(height: 24),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  // Responsive grid: 2 columns on mobile, 3 on tablet, 4 on desktop
-                  int crossAxisCount = 2;
-                  if (constraints.maxWidth > 900) {
-                    crossAxisCount = 4;
-                  } else if (constraints.maxWidth > 600) {
-                    crossAxisCount = 3;
-                  }
 
-                  return GridView.count(
-                    crossAxisCount: crossAxisCount,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.2,
-                    children: [
-                      StatisticChart(
-                        title: 'Voltage',
-                        unit: '(V)',
-                        lineColor: AppColors.primary,
-                        maxY: 40,
-                        spots: const [
-                          FlSpot(6, 20),
-                          FlSpot(7, 22),
-                          FlSpot(8, 28),
-                          FlSpot(9, 35),
-                          FlSpot(10, 34),
-                        ],
-                      ),
-                      StatisticChart(
-                        title: 'Current',
-                        unit: '(A)',
-                        lineColor: Colors.white,
-                        maxY: 6,
-                        spots: const [
-                          FlSpot(6, 2),
-                          FlSpot(7, 3),
-                          FlSpot(8, 3),
-                          FlSpot(9, 4),
-                          FlSpot(10, 3.5),
-                        ],
-                      ),
-                      StatisticChart(
-                        title: 'Energy Usage',
-                        unit: '',
-                        lineColor: AppColors.secondary,
-                        maxY: 0.4,
-                        spots: const [
-                          FlSpot(6, 0.1),
-                          FlSpot(7, 0.12),
-                          FlSpot(8, 0.15),
-                          FlSpot(9, 0.25),
-                          FlSpot(10, 0.22),
-                        ],
-                      ),
-                      StatisticChart(
-                        title: 'Water Level',
-                        unit: '(%)',
-                        lineColor: Colors.white,
-                        maxY: 60,
-                        spots: const [
-                          FlSpot(6, 30),
-                          FlSpot(7, 31),
-                          FlSpot(8, 30),
-                          FlSpot(9, 32),
-                          FlSpot(10, 33),
-                        ],
-                      ),
-                    ],
-                  );
-                },
+              // Top Row: Power and Temperature
+              Row(
+                children: [
+                  Expanded(
+                    child: StatisticChart(
+                      title: 'Power Output',
+                      unit: '(W)',
+                      lineColor: AppColors.primary,
+                      maxY: 150,
+                      spots: const [
+                        FlSpot(6, 40),
+                        FlSpot(7, 66),
+                        FlSpot(8, 84),
+                        FlSpot(9, 140),
+                        FlSpot(10, 119),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: StatisticChart(
+                      title: 'Temperature',
+                      unit: '(°C)',
+                      lineColor: AppColors.secondary,
+                      maxY: 60,
+                      spots: const [
+                        FlSpot(6, 25),
+                        FlSpot(7, 28),
+                        FlSpot(8, 32),
+                        FlSpot(9, 45),
+                        FlSpot(10, 42),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Bottom: Water Level (Full Width)
+              StatisticChart(
+                title: 'Water Level',
+                unit: '(%)',
+                lineColor: Colors.white,
+                maxY: 60,
+                spots: const [
+                  FlSpot(6, 30),
+                  FlSpot(7, 31),
+                  FlSpot(8, 30),
+                  FlSpot(9, 32),
+                  FlSpot(10, 33),
+                ],
               ),
             ],
           ),
