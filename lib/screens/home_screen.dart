@@ -120,26 +120,21 @@ class HomeScreen extends StatelessWidget {
                   int crossAxisCount;
                   double childAspectRatio;
 
-                  if (constraints.maxWidth > 1200) {
-                    crossAxisCount = 4;
-                    childAspectRatio = 1.4;
-                  } else if (constraints.maxWidth > 800) {
+                  if (constraints.maxWidth > 600) {
                     crossAxisCount = 3;
                     childAspectRatio = 1.3;
-                  } else if (constraints.maxWidth > 500) {
-                    crossAxisCount = 2;
-                    childAspectRatio = 1.3;
                   } else {
-                    crossAxisCount = 1;
-                    childAspectRatio = 2.0;
+                    crossAxisCount =
+                        2; // Fallback for very small screens, though user requested 3x3 layout, 3 on mobile is too cramped.
+                    childAspectRatio = 1.1;
                   }
 
                   return GridView.count(
                     crossAxisCount: crossAxisCount,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 20, // Increased spacing for balance
+                    mainAxisSpacing: 20, // Increased spacing for balance
                     childAspectRatio: childAspectRatio,
                     children: const [
                       DashboardCard(
