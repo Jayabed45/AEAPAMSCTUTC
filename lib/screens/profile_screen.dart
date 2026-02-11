@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
+import 'package:provider/provider.dart';
 import '../widgets/profile_combined_chart.dart';
+import '../controllers/user_controller.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -11,6 +12,14 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<UserController>().loadUserProfile();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,146 +51,174 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            // Profile Avatar & Name
-            Center(
+      body: Consumer<UserController>(
+        builder: (context, controller, child) {
+          if (controller.isLoading && controller.user == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final user = controller.user;
+
+          return RefreshIndicator(
+            onRefresh: () => controller.loadUserProfile(),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               child: Column(
                 children: [
-                  Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: colorScheme.onSurface.withValues(alpha: 0.1),
-                            width: 2,
+                  const SizedBox(height: 20),
+                  // Profile Avatar & Name
+                  Center(
+                    child: Column(
+                      children: [
+                        Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  width: 2,
+                                ),
+                                image:
+                                    user != null
+                                        ? DecorationImage(
+                                          image: NetworkImage(
+                                            user.profileImageUrl,
+                                          ),
+                                          fit: BoxFit.cover,
+                                        )
+                                        : null,
+                              ),
+                              // Fallback icon if image fails
+                              child:
+                                  user == null
+                                      ? Icon(
+                                        Icons.person,
+                                        size: 60,
+                                        color: colorScheme.onSurface.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                      )
+                                      : null,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: colorScheme.primary,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.edit,
+                                size: 16,
+                                color: colorScheme.onPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              user?.fullName ?? 'Loading...',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                            if (user?.isVerified ?? false) ...[
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.verified,
+                                color: colorScheme.primary,
+                                size: 20,
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${user?.role ?? ""} • ${user?.organization ?? ""}',
+                          style: TextStyle(
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                            fontSize: 14,
                           ),
-                          image: const DecorationImage(
-                            image: NetworkImage(
-                              'https://i.pravatar.cc/300',
-                            ), // Placeholder
-                            fit: BoxFit.cover,
-                          ),
                         ),
-                        // Fallback icon if image fails
-                        child: Icon(
-                          Icons.person,
-                          size: 60,
-                          color: colorScheme.onSurface.withValues(alpha: 0.5),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.edit,
-                          size: 16,
-                          color: colorScheme.onPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'System Admin',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.verified,
-                        color: colorScheme.primary,
-                        size: 20,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Administrator • AEAPAMSCTUTC',
-                    style: TextStyle(
-                      color: colorScheme.onSurface.withValues(alpha: 0.6),
-                      fontSize: 14,
+                      ],
                     ),
                   ),
+
+                  const SizedBox(height: 32),
+
+                  // Custom Tabs
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        borderRadius: BorderRadius.circular(25),
+                        border: Border.all(
+                          color: colorScheme.onSurface.withValues(alpha: 0.05),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _selectedIndex = 0),
+                              child: _buildTabButton(
+                                'Analytics',
+                                _selectedIndex == 0,
+                                theme,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _selectedIndex = 1),
+                              child: _buildTabButton(
+                                'Profile Info',
+                                _selectedIndex == 1,
+                                theme,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Content
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child:
+                        _selectedIndex == 0
+                            ? const CombinedProfileChart()
+                            : _buildProfileInfo(theme, controller),
+                  ),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
-
-            const SizedBox(height: 32),
-
-            // Custom Tabs
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(25),
-                  border: Border.all(
-                    color: colorScheme.onSurface.withValues(alpha: 0.05),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _selectedIndex = 0),
-                        child: _buildTabButton(
-                          'Analytics',
-                          _selectedIndex == 0,
-                          theme,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _selectedIndex = 1),
-                        child: _buildTabButton(
-                          'Profile Info',
-                          _selectedIndex == 1,
-                          theme,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Content
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child:
-                  _selectedIndex == 0
-                      ? const CombinedProfileChart()
-                      : _buildProfileInfo(theme),
-            ),
-            const SizedBox(height: 32),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildProfileInfo(ThemeData theme) {
+  Widget _buildProfileInfo(ThemeData theme, UserController controller) {
     final colorScheme = theme.colorScheme;
+    final user = controller.user;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -193,22 +230,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         children: [
-          _buildInfoRow('Full name', 'System Admin', theme),
+          _buildInfoRow('Full name', user?.fullName ?? '-', theme),
           Divider(
             color: colorScheme.onSurface.withValues(alpha: 0.05),
             height: 24,
           ),
-          _buildInfoRow('Phone number', '+63 912 345 6789', theme),
+          _buildInfoRow('Phone number', user?.phoneNumber ?? '-', theme),
           Divider(
             color: colorScheme.onSurface.withValues(alpha: 0.05),
             height: 24,
           ),
-          _buildInfoRow('Email', 'admin@aeapams.edu.ph', theme),
+          _buildInfoRow('Email', user?.email ?? '-', theme),
           Divider(
             color: colorScheme.onSurface.withValues(alpha: 0.05),
             height: 24,
           ),
-          _buildInfoRow('Username', '@sysadmin_main', theme),
+          _buildInfoRow('Username', user?.username ?? '-', theme),
         ],
       ),
     );

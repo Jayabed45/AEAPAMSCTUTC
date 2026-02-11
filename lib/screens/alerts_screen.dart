@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:provider/provider.dart';
 import '../widgets/notification_item.dart';
 import '../widgets/custom_header.dart';
 import '../widgets/confirmation_modal.dart';
 import '../widgets/status_modal.dart';
 import '../constants/app_colors.dart';
+import '../controllers/notification_controller.dart';
+import '../models/notification_model.dart';
 
 class AlertsScreen extends StatefulWidget {
   const AlertsScreen({super.key});
@@ -16,12 +19,6 @@ class AlertsScreen extends StatefulWidget {
 class _AlertsScreenState extends State<AlertsScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-
-  late List<_NotificationData> _notifications;
-
-  bool _isInitialized = false;
 
   @override
   void initState() {
@@ -30,79 +27,11 @@ class _AlertsScreenState extends State<AlertsScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     );
-    _fadeAnimation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.05),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOutQuad),
-    );
-
     _animationController.forward();
-  }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_isInitialized) {
-      _initializeNotifications();
-      _isInitialized = true;
-    }
-  }
-
-  void _initializeNotifications() {
-    _notifications = [
-      _NotificationData(
-        icon: Icons.warning_amber_rounded,
-        title: 'Overvoltage Warning',
-        time: 'Today | 03:23 AM',
-        isUnread: true,
-        iconBackgroundColor: const Color(0xFFFFC107), // Yellow for warning
-        description:
-            'The system detected an overvoltage condition (255V) in the main circuit. Automatic protection protocols were engaged to prevent equipment damage. Please check the grid voltage stability.',
-      ),
-      _NotificationData(
-        icon: Icons.thermostat_rounded,
-        title: 'High Temperature Alert',
-        time: 'Today | 05:23 PM',
-        isUnread: false,
-        iconBackgroundColor: const Color(
-          0xFFFF5722,
-        ), // Orange/Red for temperature
-        description:
-            'Internal temperature sensors recorded a reading of 55°C, approaching the safety threshold. Cooling fans have been activated at maximum speed. Ensure proper ventilation around the unit.',
-      ),
-      _NotificationData(
-        icon: Icons.check_circle_outline_rounded,
-        title: 'System Connected',
-        time: 'Friday | 05:00 PM',
-        isUnread: false,
-        iconBackgroundColor: const Color(0xFF4CAF50), // Green for success
-        description:
-            'The system has successfully reconnected to the central monitoring server after a brief network interruption. All pending data logs have been synchronized.',
-      ),
-      _NotificationData(
-        icon: Icons.system_update_rounded,
-        title: 'Firmware Update Available',
-        time: '12 Dec 2024 | 04:00 PM',
-        isUnread: false,
-        iconBackgroundColor: const Color(0xFF2196F3), // Blue for info/update
-        description:
-            'A new firmware version (v2.1.0) is available for your device. This update includes performance improvements for MPPT tracking and bug fixes for communication modules.',
-      ),
-      _NotificationData(
-        icon: Icons.water_drop_rounded,
-        title: 'Water Level Critical',
-        time: '02 Dec 2024 | 02:00 PM',
-        isUnread: false,
-        iconBackgroundColor: const Color(0xFF03A9F4), // Light Blue for water
-        description:
-            'Water level in the reservoir has dropped below 15%. Pump operation has been suspended to prevent dry running. Please check the water source immediately.',
-      ),
-    ];
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<NotificationController>().loadNotifications();
+    });
   }
 
   @override
@@ -111,7 +40,7 @@ class _AlertsScreenState extends State<AlertsScreen>
     super.dispose();
   }
 
-  Future<void> _deleteNotification(int index) async {
+  Future<void> _deleteNotification(String id) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder:
@@ -124,13 +53,8 @@ class _AlertsScreenState extends State<AlertsScreen>
     );
 
     if (confirmed == true) {
-      // Simulate network delay for effect
-      // await Future.delayed(const Duration(milliseconds: 500));
-
       if (mounted) {
-        setState(() {
-          _notifications.removeAt(index);
-        });
+        context.read<NotificationController>().deleteNotification(id);
 
         if (mounted) {
           showDialog(
@@ -147,13 +71,9 @@ class _AlertsScreenState extends State<AlertsScreen>
     }
   }
 
-  void _markAsRead(int index) {
-    setState(() {
-      _notifications[index].isUnread = false;
-    });
-  }
+  void _showNotificationDetails(NotificationModel notification) {
+    context.read<NotificationController>().markAsRead(notification.id);
 
-  void _showNotificationDetails(_NotificationData notification) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -200,7 +120,7 @@ class _AlertsScreenState extends State<AlertsScreen>
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Icon(
-                        notification.icon,
+                        _getIconData(notification.iconName),
                         color: AppColors.primary,
                         size: 28,
                       ),
@@ -283,123 +203,145 @@ class _AlertsScreenState extends State<AlertsScreen>
     );
   }
 
+  IconData _getIconData(String name) {
+    switch (name) {
+      case 'warning_amber_rounded':
+        return Icons.warning_amber_rounded;
+      case 'thermostat_rounded':
+        return Icons.thermostat_rounded;
+      case 'check_circle_outline_rounded':
+        return Icons.check_circle_outline_rounded;
+      case 'system_update_rounded':
+        return Icons.system_update_rounded;
+      case 'water_drop_rounded':
+        return Icons.water_drop_rounded;
+      default:
+        return Icons.notifications;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const CustomHeader(title: Text('Notification')),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              itemCount: _notifications.length,
-              itemBuilder: (context, index) {
-                final notification = _notifications[index];
+      body: Consumer<NotificationController>(
+        builder: (context, controller, child) {
+          if (controller.isLoading && controller.notifications.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                // Create staggered animation for each item
-                final itemDelay = index * 100;
-                final itemDuration = 600;
+          if (controller.notifications.isEmpty) {
+            return Center(
+              child: Text(
+                'No notifications',
+                style: TextStyle(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
+              ),
+            );
+          }
 
-                final itemAnimation = CurvedAnimation(
-                  parent: _animationController,
-                  curve: Interval(
-                    (itemDelay / 1000).clamp(0.0, 1.0),
-                    ((itemDelay + itemDuration) / 1000).clamp(0.0, 1.0),
-                    curve: Curves.easeOutQuart,
-                  ),
-                );
+          return RefreshIndicator(
+            onRefresh: () => controller.loadNotifications(),
+            child: SafeArea(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 800),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    itemCount: controller.notifications.length,
+                    itemBuilder: (context, index) {
+                      final notification = controller.notifications[index];
 
-                final itemFade = Tween<double>(
-                  begin: 0.0,
-                  end: 1.0,
-                ).animate(itemAnimation);
-                final itemSlide = Tween<Offset>(
-                  begin: const Offset(0, 0.5),
-                  end: Offset.zero,
-                ).animate(itemAnimation);
+                      // Create staggered animation for each item
+                      final itemDelay = index * 100;
+                      final itemDuration = 600;
 
-                return FadeTransition(
-                  opacity: itemFade,
-                  child: SlideTransition(
-                    position: itemSlide,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 0),
-                      child: Slidable(
-                        key: ValueKey(
-                          'notification_${notification.title}_$index',
+                      final itemAnimation = CurvedAnimation(
+                        parent: _animationController,
+                        curve: Interval(
+                          (itemDelay / 1000).clamp(0.0, 1.0),
+                          ((itemDelay + itemDuration) / 1000).clamp(0.0, 1.0),
+                          curve: Curves.easeOutQuart,
                         ),
-                        endActionPane: ActionPane(
-                          motion: const ScrollMotion(),
-                          extentRatio: 0.25,
-                          children: [
-                            CustomSlidableAction(
-                              onPressed:
-                                  (context) => _deleteNotification(index),
-                              backgroundColor: Colors.transparent,
-                              foregroundColor:
-                                  Theme.of(context).colorScheme.error,
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.error.withValues(alpha: 0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.delete_outline_rounded,
-                                    size: 24,
+                      );
+
+                      final itemFade = Tween<double>(
+                        begin: 0.0,
+                        end: 1.0,
+                      ).animate(itemAnimation);
+                      final itemSlide = Tween<Offset>(
+                        begin: const Offset(0, 0.5),
+                        end: Offset.zero,
+                      ).animate(itemAnimation);
+
+                      return FadeTransition(
+                        opacity: itemFade,
+                        child: SlideTransition(
+                          position: itemSlide,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Slidable(
+                              key: ValueKey(notification.id),
+                              endActionPane: ActionPane(
+                                motion: const ScrollMotion(),
+                                extentRatio: 0.25,
+                                children: [
+                                  CustomSlidableAction(
+                                    onPressed:
+                                        (context) => _deleteNotification(
+                                          notification.id,
+                                        ),
+                                    backgroundColor: Colors.transparent,
+                                    foregroundColor:
+                                        Theme.of(context).colorScheme.error,
+                                    child: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .error
+                                            .withValues(alpha: 0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.delete_outline_rounded,
+                                          size: 24,
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                ],
+                              ),
+                              child: NotificationItem(
+                                icon: _getIconData(notification.iconName),
+                                title: notification.title,
+                                time: notification.time,
+                                description: notification.description,
+                                isUnread: notification.isUnread,
+                                iconBackgroundColor: AppColors.primary,
+                                onTap:
+                                    () =>
+                                        _showNotificationDetails(notification),
                               ),
                             ),
-                          ],
+                          ),
                         ),
-                        child: NotificationItem(
-                          icon: notification.icon,
-                          title: notification.title,
-                          time: notification.time,
-                          isUnread: notification.isUnread,
-                          iconBackgroundColor: AppColors.primary,
-                          description: notification.description,
-                          onTap: () {
-                            if (notification.isUnread) {
-                              _markAsRead(index);
-                            }
-                            // Show details in a modal or similar if needed
-                            _showNotificationDetails(notification);
-                          },
-                        ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
-}
-
-class _NotificationData {
-  final IconData icon;
-  final String title;
-  final String time;
-  bool isUnread;
-  final Color? iconBackgroundColor;
-  final String description;
-
-  _NotificationData({
-    required this.icon,
-    required this.title,
-    required this.time,
-    required this.isUnread,
-    this.iconBackgroundColor,
-    required this.description,
-  });
 }

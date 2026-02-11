@@ -1,14 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'constants/app_colors.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'main_screen.dart';
 import 'providers/theme_provider.dart';
+import 'controllers/system_controller.dart';
+import 'controllers/notification_controller.dart';
+import 'controllers/user_controller.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase initialization failed: $e');
+    debugPrint('Make sure you have configured Firebase for your project.');
+  }
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => SystemController()),
+        ChangeNotifierProvider(create: (_) => NotificationController()),
+        ChangeNotifierProvider(create: (_) => UserController()),
+      ],
       child: const MyApp(),
     ),
   );

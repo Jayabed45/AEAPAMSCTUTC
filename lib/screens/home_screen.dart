@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../widgets/dashboard_card.dart';
 import '../widgets/combined_dashboard_card.dart';
 import '../widgets/custom_header.dart';
-import '../constants/app_colors.dart';
+import '../controllers/system_controller.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -49,6 +50,11 @@ class _HomeScreenState extends State<HomeScreen>
 
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       _updateTime();
+    });
+
+    // Load data from backend
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SystemController>().loadSystemData();
     });
   }
 
@@ -111,78 +117,92 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Main Combo Card with Time
-                  CombinedDashboardCard(
-                    title: _formattedDate,
-                    voltage: '34.2 V',
-                    current: '5.8 A',
-                    power: '198.4 W',
-                    temperature: '45.3°C',
-                    waterLevel: 82,
+        child: Consumer<SystemController>(
+          builder: (context, controller, child) {
+            if (controller.isLoading && controller.systemData == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final data = controller.systemData;
+
+            return RefreshIndicator(
+              onRefresh: () => controller.loadSystemData(),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16.0),
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Main Combo Card with Time
+                        CombinedDashboardCard(
+                          title: _formattedDate,
+                          voltage: '${data?.voltage ?? 0.0} V',
+                          current: '${data?.current ?? 0.0} A',
+                          power: '${data?.power ?? 0.0} W',
+                          temperature: '${data?.temperature ?? 0.0}°C',
+                          waterLevel: data?.waterLevel.toDouble() ?? 0.0,
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Bottom Cards Grid
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            int crossAxisCount;
+                            double childAspectRatio;
+
+                            if (constraints.maxWidth > 800) {
+                              crossAxisCount = 2;
+                              childAspectRatio = 2.5;
+                            } else if (constraints.maxWidth > 600) {
+                              crossAxisCount = 2;
+                              childAspectRatio = 2.0;
+                            } else {
+                              crossAxisCount = 2;
+                              childAspectRatio = 1.0;
+                            }
+
+                            return GridView.count(
+                              crossAxisCount: crossAxisCount,
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              crossAxisSpacing: 20,
+                              mainAxisSpacing: 20,
+                              childAspectRatio: childAspectRatio,
+                              children: [
+                                DashboardCard(
+                                  icon: Icons.bolt,
+                                  iconColor: Colors.white,
+                                  value: '${data?.energyHour ?? 0.0} kWh',
+                                  label: 'Energy Hour',
+                                  subLabel: 'Water Data',
+                                  statusText: data?.status ?? 'Normal',
+                                  statusColor: Colors.green,
+                                ),
+                                DashboardCard(
+                                  icon: Icons.link,
+                                  iconColor: Colors.white,
+                                  value: '${data?.dailyEnergy ?? 0.0} kWh',
+                                  label: 'Daily Energy',
+                                  subLabel: 'Hourly Data',
+                                  statusText: 'Hourly',
+                                  statusColor: Colors.green,
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-
-                  const SizedBox(height: 24),
-
-                  // Bottom Cards Grid
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      int crossAxisCount;
-                      double childAspectRatio;
-
-                      if (constraints.maxWidth > 800) {
-                        crossAxisCount = 2;
-                        childAspectRatio = 2.5;
-                      } else if (constraints.maxWidth > 600) {
-                        crossAxisCount = 2;
-                        childAspectRatio = 2.0;
-                      } else {
-                        crossAxisCount = 2;
-                        childAspectRatio = 1.0;
-                      }
-
-                      return GridView.count(
-                        crossAxisCount: crossAxisCount,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisSpacing: 20,
-                        mainAxisSpacing: 20,
-                        childAspectRatio: childAspectRatio,
-                        children: const [
-                          DashboardCard(
-                            icon: Icons.bolt,
-                            iconColor: Colors.white,
-                            value: '0.21 kWh',
-                            label: 'Energy Hour',
-                            subLabel: 'Water Data',
-                            statusText: 'Normal',
-                            statusColor: Colors.green,
-                          ),
-                          DashboardCard(
-                            icon: Icons.link,
-                            iconColor: Colors.white,
-                            value: '3.68 kWh',
-                            label: 'Daily Energy',
-                            subLabel: 'Hourly Data',
-                            statusText: 'Hourly',
-                            statusColor: Colors.green,
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

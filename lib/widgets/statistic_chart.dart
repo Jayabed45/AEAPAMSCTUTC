@@ -1,6 +1,5 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 class StatisticChart extends StatefulWidget {
   final String title;

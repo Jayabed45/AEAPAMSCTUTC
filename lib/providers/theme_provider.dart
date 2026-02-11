@@ -24,7 +24,6 @@ class ThemeProvider with ChangeNotifier {
       onSecondary: Colors.black,
       surface: AppColors.surface,
       onSurface: AppColors.text,
-      background: AppColors.background,
     ),
     cardColor: AppColors.card,
     appBarTheme: const AppBarTheme(
@@ -44,7 +43,6 @@ class ThemeProvider with ChangeNotifier {
       onSecondary: Colors.black,
       surface: Color(0xFFF5F5F5),
       onSurface: Colors.black,
-      background: Colors.white,
     ),
     cardColor: Colors.white,
     appBarTheme: const AppBarTheme(

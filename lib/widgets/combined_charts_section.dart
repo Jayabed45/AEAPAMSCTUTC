@@ -292,12 +292,13 @@ class _CombinedChartsSectionState extends State<CombinedChartsSection>
                             String unit = '';
 
                             // Identify series by color or index
-                            if (barSpot.barIndex == 0)
+                            if (barSpot.barIndex == 0) {
                               unit = 'V';
-                            else if (barSpot.barIndex == 1)
+                            } else if (barSpot.barIndex == 1) {
                               unit = 'A';
-                            else if (barSpot.barIndex == 2)
+                            } else if (barSpot.barIndex == 2) {
                               unit = 'kWh';
+                            }
 
                             return LineTooltipItem(
                               '${barSpot.y.toStringAsFixed(1)} $unit',
