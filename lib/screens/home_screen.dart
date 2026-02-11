@@ -2,10 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../models/system_data_model.dart';
 import '../widgets/dashboard_card.dart';
 import '../widgets/combined_dashboard_card.dart';
 import '../widgets/custom_header.dart';
 import '../controllers/system_controller.dart';
+import '../services/api_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -67,6 +69,270 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
+  void _showInsertDataDialog(BuildContext context) {
+    final voltageController = TextEditingController(text: '220.0');
+    final currentController = TextEditingController(text: '5.0');
+    final powerController = TextEditingController(text: '1100.0');
+    final tempController = TextEditingController(text: '30.0');
+    final waterController = TextEditingController(text: '75');
+    final energyHourController = TextEditingController(text: '1.2');
+    final dailyEnergyController = TextEditingController(text: '15.5');
+    final statusController = TextEditingController(text: 'Normal');
+    final hourController = TextEditingController(
+      text: DateTime.now().hour.toString(),
+    );
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      transitionDuration: const Duration(milliseconds: 400),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Align(
+          alignment: Alignment.topCenter,
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(maxWidth: 500),
+              margin: const EdgeInsets.fromLTRB(16, 60, 16, 16),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Insert System Data',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(hourController, 'Hour (0-23)'),
+                    _buildTextField(voltageController, 'Voltage (V)'),
+                    _buildTextField(currentController, 'Current (A)'),
+                    _buildTextField(powerController, 'Power (W)'),
+                    _buildTextField(tempController, 'Temperature (°C)'),
+                    _buildTextField(waterController, 'Water Level (%)'),
+                    _buildTextField(energyHourController, 'Energy Hour (kWh)'),
+                    _buildTextField(
+                      dailyEnergyController,
+                      'Daily Energy (kWh)',
+                    ),
+                    _buildTextField(statusController, 'Status'),
+                    const SizedBox(height: 24),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () async {
+                            try {
+                              await context
+                                  .read<SystemController>()
+                                  .generateFullDayData();
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Generated data for 6 AM - 6 PM!',
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $e')),
+                                );
+                              }
+                            }
+                          },
+                          child: const Text('Full Day'),
+                        ),
+                        OutlinedButton(
+                          onPressed: () async {
+                            try {
+                              final warningData = SystemDataModel(
+                                voltage: 265.0,
+                                current: 8.5,
+                                power: 2252.5,
+                                temperature: 52.5,
+                                waterLevel: 8,
+                                energyHour: 2.5,
+                                dailyEnergy: 25.0,
+                                status: 'Warning',
+                              );
+                              await context.read<SystemController>().updateData(
+                                warningData,
+                              );
+
+                              final apiService = ApiService();
+                              await apiService.addNotification(
+                                title: 'Critical Temperature Alert',
+                                description:
+                                    'System temperature has reached 52.5°C. Immediate attention required!',
+                                iconName: 'thermostat_rounded',
+                                iconColorHex: '#F44336',
+                              );
+                              await apiService.addNotification(
+                                title: 'Critical Water Level',
+                                description:
+                                    'Water level is extremely low (8%). System shutdown imminent.',
+                                iconName: 'water_drop_rounded',
+                                iconColorHex: '#F44336',
+                              );
+                              await apiService.addNotification(
+                                title: 'Overvoltage Alert',
+                                description: 'Voltage surge detected: 265.0V.',
+                                iconName: 'bolt',
+                                iconColorHex: '#F44336',
+                              );
+
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Warning data and alerts inserted!',
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $e')),
+                                );
+                              }
+                            }
+                          },
+                          child: const Text('Alert Data'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            final newData = SystemDataModel(
+                              voltage:
+                                  double.tryParse(voltageController.text) ??
+                                  0.0,
+                              current:
+                                  double.tryParse(currentController.text) ??
+                                  0.0,
+                              power:
+                                  double.tryParse(powerController.text) ?? 0.0,
+                              temperature:
+                                  double.tryParse(tempController.text) ?? 0.0,
+                              waterLevel:
+                                  int.tryParse(waterController.text) ?? 0,
+                              energyHour:
+                                  double.tryParse(energyHourController.text) ??
+                                  0.0,
+                              dailyEnergy:
+                                  double.tryParse(dailyEnergyController.text) ??
+                                  0.0,
+                              status: statusController.text,
+                            );
+
+                            try {
+                              final selectedHour =
+                                  int.tryParse(hourController.text) ??
+                                  DateTime.now().hour;
+                              final now = DateTime.now();
+                              final customTime = DateTime(
+                                now.year,
+                                now.month,
+                                now.day,
+                                selectedHour,
+                              );
+                              await context.read<SystemController>().updateData(
+                                newData,
+                                customTimestamp: customTime,
+                              );
+
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Data inserted successfully!',
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $e')),
+                                );
+                              }
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+                            foregroundColor: Colors.black,
+                          ),
+                          child: const Text('Save Data'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, -1),
+            end: Offset.zero,
+          ).animate(
+            CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+          ),
+          child: child,
+        );
+      },
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+        keyboardType:
+            label == 'Status' ? TextInputType.text : TextInputType.number,
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _timer.cancel();
@@ -116,6 +382,11 @@ class _HomeScreenState extends State<HomeScreen>
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showInsertDataDialog(context),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        child: const Icon(Icons.add_chart),
+      ),
       body: SafeArea(
         child: Consumer<SystemController>(
           builder: (context, controller, child) {
@@ -140,10 +411,13 @@ class _HomeScreenState extends State<HomeScreen>
                         // Main Combo Card with Time
                         CombinedDashboardCard(
                           title: _formattedDate,
-                          voltage: '${data?.voltage ?? 0.0} V',
-                          current: '${data?.current ?? 0.0} A',
-                          power: '${data?.power ?? 0.0} W',
-                          temperature: '${data?.temperature ?? 0.0}°C',
+                          voltage:
+                              '${data?.voltage.toStringAsFixed(1) ?? 0.0} V',
+                          current:
+                              '${data?.current.toStringAsFixed(1) ?? 0.0} A',
+                          power: '${data?.power.toStringAsFixed(1) ?? 0.0} W',
+                          temperature:
+                              '${data?.temperature.toStringAsFixed(1) ?? 0.0}°C',
                           waterLevel: data?.waterLevel.toDouble() ?? 0.0,
                         ),
 
@@ -177,7 +451,8 @@ class _HomeScreenState extends State<HomeScreen>
                                 DashboardCard(
                                   icon: Icons.bolt,
                                   iconColor: Colors.white,
-                                  value: '${data?.energyHour ?? 0.0} kWh',
+                                  value:
+                                      '${data?.energyHour.toStringAsFixed(1) ?? 0.0} kWh',
                                   label: 'Energy Hour',
                                   subLabel: 'Water Data',
                                   statusText: data?.status ?? 'Normal',
@@ -186,7 +461,8 @@ class _HomeScreenState extends State<HomeScreen>
                                 DashboardCard(
                                   icon: Icons.link,
                                   iconColor: Colors.white,
-                                  value: '${data?.dailyEnergy ?? 0.0} kWh',
+                                  value:
+                                      '${data?.dailyEnergy.toStringAsFixed(1) ?? 0.0} kWh',
                                   label: 'Daily Energy',
                                   subLabel: 'Hourly Data',
                                   statusText: 'Hourly',

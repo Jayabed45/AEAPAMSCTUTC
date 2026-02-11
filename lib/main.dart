@@ -9,6 +9,8 @@ import 'providers/theme_provider.dart';
 import 'controllers/system_controller.dart';
 import 'controllers/notification_controller.dart';
 import 'controllers/user_controller.dart';
+import 'controllers/statistics_controller.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +18,8 @@ Future<void> main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    // Initialize FCM
+    await NotificationService().initialize();
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
   }
@@ -26,6 +30,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => SystemController()),
         ChangeNotifierProvider(create: (_) => NotificationController()),
         ChangeNotifierProvider(create: (_) => UserController()),
+        ChangeNotifierProvider(create: (_) => StatisticsController()),
       ],
       child: const MyApp(),
     ),

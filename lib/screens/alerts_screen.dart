@@ -215,6 +215,10 @@ class _AlertsScreenState extends State<AlertsScreen>
         return Icons.system_update_rounded;
       case 'water_drop_rounded':
         return Icons.water_drop_rounded;
+      case 'bolt':
+        return Icons.bolt;
+      case 'cloud_off':
+        return Icons.cloud_off;
       default:
         return Icons.notifications;
     }

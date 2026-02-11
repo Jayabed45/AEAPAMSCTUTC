@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:provider/provider.dart';
 import '../widgets/statistic_chart.dart';
 import '../widgets/custom_header.dart';
 import '../widgets/combined_charts_section.dart';
 import '../constants/app_colors.dart';
+import '../controllers/statistics_controller.dart';
 
 class GraphsScreen extends StatefulWidget {
   const GraphsScreen({super.key});
@@ -52,75 +54,58 @@ class _GraphsScreenState extends State<GraphsScreen>
     return Scaffold(
       appBar: const CustomHeader(title: Text('Statistics')),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const CombinedChartsSection(),
-                  const SizedBox(height: 24),
+        child: Consumer<StatisticsController>(
+          builder: (context, statsController, child) {
+            return RefreshIndicator(
+              onRefresh: () async {
+                await statsController.reloadData();
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16.0),
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const CombinedChartsSection(),
+                        const SizedBox(height: 24),
 
-                  // Top Row: Power and Temperature
-                  Row(
-                    children: [
-                      Expanded(
-                        child: StatisticChart(
-                          title: 'Power Output',
-                          unit: '(W)',
-                          lineColor: AppColors.primary,
-                          maxY: 150,
-                          spots: const [
-                            FlSpot(6, 40),
-                            FlSpot(7, 66),
-                            FlSpot(8, 84),
-                            FlSpot(9, 140),
-                            FlSpot(10, 119),
+                        // Top Row: Power and Temperature
+                        Row(
+                          children: [
+                            Expanded(
+                              child: StatisticChart(
+                                title: 'Power Output',
+                                unit: '(W)',
+                                lineColor: AppColors.primary,
+                                maxY: 3500,
+                                spots: statsController.getPowerSpots(),
+                                isLoading: statsController.isLoading,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: StatisticChart(
+                                title: 'Temperature',
+                                unit: '(°C)',
+                                lineColor: AppColors.secondary,
+                                maxY: 60,
+                                spots: statsController.getTemperatureSpots(),
+                                isLoading: statsController.isLoading,
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: StatisticChart(
-                          title: 'Temperature',
-                          unit: '(°C)',
-                          lineColor: AppColors.secondary,
-                          maxY: 60,
-                          spots: const [
-                            FlSpot(6, 25),
-                            FlSpot(7, 28),
-                            FlSpot(8, 32),
-                            FlSpot(9, 45),
-                            FlSpot(10, 42),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-
-                  const SizedBox(height: 16),
-
-                  // Bottom: Water Level (Full Width)
-                  StatisticChart(
-                    title: 'Water Level',
-                    unit: '(%)',
-                    lineColor: Theme.of(context).colorScheme.onSurface,
-                    maxY: 60,
-                    spots: const [
-                      FlSpot(6, 30),
-                      FlSpot(7, 31),
-                      FlSpot(8, 30),
-                      FlSpot(9, 32),
-                      FlSpot(10, 33),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

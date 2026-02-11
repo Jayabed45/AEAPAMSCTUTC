@@ -1,6 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
+import '../controllers/statistics_controller.dart';
 
 class CombinedChartsSection extends StatefulWidget {
   const CombinedChartsSection({super.key});
@@ -14,30 +16,6 @@ class _CombinedChartsSectionState extends State<CombinedChartsSection>
   late AnimationController _controller;
   late Animation<double> _animation;
   int? _touchedIndex;
-
-  final List<FlSpot> voltageSpots = const [
-    FlSpot(6, 20),
-    FlSpot(7, 22),
-    FlSpot(8, 28),
-    FlSpot(9, 35),
-    FlSpot(10, 34),
-  ];
-
-  final List<FlSpot> currentSpots = const [
-    FlSpot(6, 2),
-    FlSpot(7, 3),
-    FlSpot(8, 3),
-    FlSpot(9, 4),
-    FlSpot(10, 3.5),
-  ];
-
-  final List<FlSpot> energySpots = const [
-    FlSpot(6, 0.1),
-    FlSpot(7, 0.12),
-    FlSpot(8, 0.15),
-    FlSpot(9, 0.25),
-    FlSpot(10, 0.22),
-  ];
 
   @override
   void initState() {
@@ -68,11 +46,8 @@ class _CombinedChartsSectionState extends State<CombinedChartsSection>
 
     List<FlSpot> visibleSpots = [];
     for (int i = 0; i < allSpots.length; i++) {
-      if (allSpots[i].x < currentX) {
+      if (allSpots[i].x <= currentX) {
         visibleSpots.add(allSpots[i]);
-      } else if (allSpots[i].x == currentX) {
-        visibleSpots.add(allSpots[i]);
-        break;
       } else {
         // Interpolate the last spot
         if (i > 0) {
@@ -86,7 +61,6 @@ class _CombinedChartsSectionState extends State<CombinedChartsSection>
       }
     }
 
-    // Ensure at least one spot is visible to prevent errors if animation hasn't started well
     if (visibleSpots.isEmpty && allSpots.isNotEmpty) {
       visibleSpots.add(allSpots.first);
     }
@@ -96,253 +70,275 @@ class _CombinedChartsSectionState extends State<CombinedChartsSection>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(24),
-        border:
-            Theme.of(context).brightness == Brightness.dark
-                ? null
-                : Border.all(color: Theme.of(context).dividerColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return Consumer<StatisticsController>(
+      builder: (context, statsController, child) {
+        final voltageSpots = statsController.getVoltageSpots();
+        final currentSpots = statsController.getCurrentSpots();
+        final energySpots = statsController.getEnergySpots();
+
+        if (statsController.isLoading) {
+          return Container(
+            height: 300,
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (voltageSpots.isEmpty) {
+          return Container(
+            height: 300,
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(24),
+              border:
+                  Theme.of(context).brightness == Brightness.dark
+                      ? null
+                      : Border.all(color: Theme.of(context).dividerColor),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    'System Overview',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Icon(
+                    Icons.bar_chart,
+                    size: 48,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      _buildLegendItem(context, 'Voltage', AppColors.primary),
-                      const SizedBox(width: 12),
-                      _buildLegendItem(
+                  Text(
+                    'No data yet',
+                    style: TextStyle(
+                      color: Theme.of(
                         context,
-                        'Current',
-                        Theme.of(context).colorScheme.onSurface,
+                      ).colorScheme.onSurface.withValues(alpha: 0.5),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(24),
+            border:
+                Theme.of(context).brightness == Brightness.dark
+                    ? null
+                    : Border.all(color: Theme.of(context).dividerColor),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'System Overview',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      const SizedBox(width: 12),
-                      _buildLegendItem(context, 'Energy', AppColors.secondary),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          _buildLegendItem(
+                            context,
+                            'Voltage',
+                            AppColors.primary,
+                          ),
+                          const SizedBox(width: 12),
+                          _buildLegendItem(
+                            context,
+                            'Current',
+                            Theme.of(context).colorScheme.onSurface,
+                          ),
+                          const SizedBox(width: 12),
+                          _buildLegendItem(
+                            context,
+                            'Energy',
+                            AppColors.secondary,
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ],
-              );
-            },
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            height: 250,
-            child: AnimatedBuilder(
-              animation: _animation,
-              builder: (context, child) {
-                final visibleVoltageSpots = _getVisibleSpots(
-                  voltageSpots,
-                  _animation.value,
-                );
-                final visibleCurrentSpots = _getVisibleSpots(
-                  currentSpots,
-                  _animation.value,
-                );
-                final visibleEnergySpots = _getVisibleSpots(
-                  energySpots,
-                  _animation.value,
-                );
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: 250,
+                child: AnimatedBuilder(
+                  animation: _animation,
+                  builder: (context, child) {
+                    final visibleVoltageSpots = _getVisibleSpots(
+                      voltageSpots,
+                      _animation.value,
+                    );
+                    final visibleCurrentSpots = _getVisibleSpots(
+                      currentSpots,
+                      _animation.value,
+                    );
+                    final visibleEnergySpots = _getVisibleSpots(
+                      energySpots,
+                      _animation.value,
+                    );
 
-                final voltageBar = LineChartBarData(
-                  spots: visibleVoltageSpots,
-                  isCurved: true,
-                  color: AppColors.primary,
-                  barWidth: 3,
-                  isStrokeCapRound: true,
-                  dotData: const FlDotData(show: false),
-                  belowBarData: BarAreaData(
-                    show: true,
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                  ),
-                );
-
-                final currentBar = LineChartBarData(
-                  spots: visibleCurrentSpots,
-                  isCurved: true,
-                  color: Theme.of(context).colorScheme.onSurface,
-                  barWidth: 3,
-                  isStrokeCapRound: true,
-                  dotData: const FlDotData(show: false),
-                  belowBarData: BarAreaData(show: false),
-                );
-
-                final energyBar = LineChartBarData(
-                  spots: visibleEnergySpots,
-                  isCurved: true,
-                  color: AppColors.secondary,
-                  barWidth: 3,
-                  isStrokeCapRound: true,
-                  dotData: const FlDotData(show: false),
-                  belowBarData: BarAreaData(show: false),
-                );
-
-                return LineChart(
-                  LineChartData(
-                    gridData: FlGridData(
-                      show: true,
-                      drawVerticalLine: false,
-                      getDrawingHorizontalLine:
-                          (value) => FlLine(
-                            color: Theme.of(
-                              context,
-                            ).dividerColor.withValues(alpha: 0.1),
-                            strokeWidth: 1,
-                          ),
-                    ),
-                    titlesData: FlTitlesData(
-                      show: true,
-                      rightTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
+                    final voltageBar = LineChartBarData(
+                      spots: visibleVoltageSpots,
+                      isCurved: true,
+                      color: AppColors.primary,
+                      barWidth: 3,
+                      isStrokeCapRound: true,
+                      dotData: const FlDotData(show: false),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: AppColors.primary.withValues(alpha: 0.1),
                       ),
-                      topTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 22,
-                          interval: 1,
-                          getTitlesWidget: (value, meta) {
-                            if (value % 1 == 0) {
-                              return Text(
-                                '${value.toInt()}h',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface
-                                      .withValues(alpha: 0.3),
-                                  fontSize: 10,
-                                ),
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                        ),
-                      ),
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          interval: 10,
-                          reservedSize: 32,
-                          getTitlesWidget: (value, meta) {
-                            return Text(
-                              value.toInt().toString(),
-                              style: TextStyle(
+                    );
+
+                    final currentBar = LineChartBarData(
+                      spots: visibleCurrentSpots,
+                      isCurved: true,
+                      color: Theme.of(context).colorScheme.onSurface,
+                      barWidth: 3,
+                      isStrokeCapRound: true,
+                      dotData: const FlDotData(show: false),
+                      belowBarData: BarAreaData(show: false),
+                    );
+
+                    final energyBar = LineChartBarData(
+                      spots: visibleEnergySpots,
+                      isCurved: true,
+                      color: AppColors.secondary,
+                      barWidth: 3,
+                      isStrokeCapRound: true,
+                      dotData: const FlDotData(show: false),
+                      belowBarData: BarAreaData(show: false),
+                    );
+
+                    return LineChart(
+                      LineChartData(
+                        gridData: FlGridData(
+                          show: true,
+                          drawVerticalLine: false,
+                          getDrawingHorizontalLine:
+                              (value) => FlLine(
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.3),
-                                fontSize: 10,
+                                ).dividerColor.withValues(alpha: 0.1),
+                                strokeWidth: 1,
                               ),
-                            );
-                          },
+                        ),
+                        titlesData: FlTitlesData(
+                          show: true,
+                          rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          topTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 22,
+                              interval: 4,
+                              getTitlesWidget: (value, meta) {
+                                return Text(
+                                  '${value.toInt()}:00',
+                                  style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.3),
+                                    fontSize: 10,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              interval: 10,
+                              reservedSize: 32,
+                              getTitlesWidget: (value, meta) {
+                                return Text(
+                                  value.toInt().toString(),
+                                  style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.3),
+                                    fontSize: 10,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        borderData: FlBorderData(show: false),
+                        lineBarsData: [voltageBar, currentBar, energyBar],
+                        lineTouchData: LineTouchData(
+                          handleBuiltInTouches: true,
+                          touchTooltipData: LineTouchTooltipData(
+                            getTooltipColor:
+                                (touchedSpot) => Theme.of(context).cardColor,
+                            tooltipBorderRadius: BorderRadius.circular(8),
+                            tooltipPadding: const EdgeInsets.all(8),
+                            tooltipBorder: BorderSide(
+                              color: Theme.of(context).dividerColor,
+                            ),
+                            getTooltipItems: (
+                              List<LineBarSpot> touchedBarSpots,
+                            ) {
+                              return touchedBarSpots.map((barSpot) {
+                                String unit = '';
+
+                                if (barSpot.barIndex == 0) {
+                                  unit = 'V';
+                                } else if (barSpot.barIndex == 1) {
+                                  unit = 'A';
+                                } else if (barSpot.barIndex == 2) {
+                                  unit = 'kWh';
+                                }
+
+                                return LineTooltipItem(
+                                  '${barSpot.y.toStringAsFixed(1)} $unit',
+                                  TextStyle(
+                                    color:
+                                        barSpot.bar.color ??
+                                        Theme.of(context).colorScheme.onSurface,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                );
+                              }).toList();
+                            },
+                          ),
                         ),
                       ),
-                    ),
-                    borderData: FlBorderData(show: false),
-                    minX: 6,
-                    maxX: 10,
-                    minY: 0,
-                    maxY: 45, // Accommodate max voltage (~35)
-                    lineBarsData: [voltageBar, currentBar, energyBar],
-                    lineTouchData: LineTouchData(
-                      handleBuiltInTouches: true,
-                      touchCallback: (FlTouchEvent event, lineTouchResponse) {
-                        if (!event.isInterestedForInteractions ||
-                            lineTouchResponse == null ||
-                            lineTouchResponse.lineBarSpots == null ||
-                            lineTouchResponse.lineBarSpots!.isEmpty) {
-                          return;
-                        }
-                        if (event is FlTapUpEvent) {
-                          final spotIndex =
-                              lineTouchResponse.lineBarSpots!.first.spotIndex;
-                          setState(() {
-                            if (_touchedIndex == spotIndex) {
-                              _touchedIndex = null;
-                            } else {
-                              _touchedIndex = spotIndex;
-                            }
-                          });
-                        }
-                      },
-                      touchTooltipData: LineTouchTooltipData(
-                        getTooltipColor:
-                            (touchedSpot) => Theme.of(context).cardColor,
-                        tooltipBorderRadius: BorderRadius.circular(8),
-                        tooltipPadding: const EdgeInsets.all(8),
-                        tooltipBorder: BorderSide(
-                          color: Theme.of(context).dividerColor,
-                        ),
-                        getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
-                          return touchedBarSpots.map((barSpot) {
-                            String unit = '';
-
-                            // Identify series by color or index
-                            if (barSpot.barIndex == 0) {
-                              unit = 'V';
-                            } else if (barSpot.barIndex == 1) {
-                              unit = 'A';
-                            } else if (barSpot.barIndex == 2) {
-                              unit = 'kWh';
-                            }
-
-                            return LineTooltipItem(
-                              '${barSpot.y.toStringAsFixed(1)} $unit',
-                              TextStyle(
-                                color:
-                                    barSpot.bar.color ??
-                                    Theme.of(context).colorScheme.onSurface,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            );
-                          }).toList();
-                        },
-                      ),
-                    ),
-                    showingTooltipIndicators:
-                        _touchedIndex != null &&
-                                _touchedIndex! < visibleVoltageSpots.length
-                            ? [
-                              ShowingTooltipIndicators([
-                                LineBarSpot(
-                                  voltageBar,
-                                  0,
-                                  visibleVoltageSpots[_touchedIndex!],
-                                ),
-                                LineBarSpot(
-                                  currentBar,
-                                  1,
-                                  visibleCurrentSpots[_touchedIndex!],
-                                ),
-                                LineBarSpot(
-                                  energyBar,
-                                  2,
-                                  visibleEnergySpots[_touchedIndex!],
-                                ),
-                              ]),
-                            ]
-                            : [],
-                  ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
