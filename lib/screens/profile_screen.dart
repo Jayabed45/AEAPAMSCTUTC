@@ -14,22 +14,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'My profile',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
+            icon: Icon(Icons.settings, color: colorScheme.onSurface),
             onPressed: () {
               // Navigate to settings if needed, or just a placeholder
             },
@@ -52,7 +58,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         height: 100,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                          border: Border.all(
+                            color: colorScheme.onSurface.withValues(alpha: 0.1),
+                            width: 2,
+                          ),
                           image: const DecorationImage(
                             image: NetworkImage(
                               'https://i.pravatar.cc/300',
@@ -61,22 +70,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         // Fallback icon if image fails
-                        child: const Icon(
+                        child: Icon(
                           Icons.person,
                           size: 60,
-                          color: Colors.white,
+                          color: colorScheme.onSurface.withValues(alpha: 0.5),
                         ),
                       ),
                       Container(
                         padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.edit,
                           size: 16,
-                          color: AppColors.background,
+                          color: colorScheme.onPrimary,
                         ),
                       ),
                     ],
@@ -84,23 +93,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
+                    children: [
                       Text(
                         'System Admin',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: colorScheme.onSurface,
                         ),
                       ),
-                      SizedBox(width: 8),
-                      Icon(Icons.verified, color: AppColors.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.verified,
+                        color: colorScheme.primary,
+                        size: 20,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Administrator • AEAPAMSCTUTC',
-                    style: TextStyle(color: Colors.grey, fontSize: 14),
+                    style: TextStyle(
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontSize: 14,
+                    ),
                   ),
                 ],
               ),
@@ -114,8 +130,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: colorScheme.onSurface.withValues(alpha: 0.05),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -125,6 +144,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: _buildTabButton(
                           'Analytics',
                           _selectedIndex == 0,
+                          theme,
                         ),
                       ),
                     ),
@@ -134,6 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: _buildTabButton(
                           'Profile Info',
                           _selectedIndex == 1,
+                          theme,
                         ),
                       ),
                     ),
@@ -150,7 +171,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child:
                   _selectedIndex == 0
                       ? const CombinedProfileChart()
-                      : _buildProfileInfo(),
+                      : _buildProfileInfo(theme),
             ),
             const SizedBox(height: 32),
           ],
@@ -159,37 +180,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileInfo() {
+  Widget _buildProfileInfo(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(
+          color: colorScheme.onSurface.withValues(alpha: 0.05),
+        ),
       ),
       child: Column(
         children: [
-          _buildInfoRow('Full name', 'System Admin'),
-          const Divider(color: Colors.white10, height: 24),
-          _buildInfoRow('Phone number', '+63 912 345 6789'),
-          const Divider(color: Colors.white10, height: 24),
-          _buildInfoRow('Email', 'admin@aeapams.edu.ph'),
-          const Divider(color: Colors.white10, height: 24),
-          _buildInfoRow('Username', '@sysadmin_main'),
+          _buildInfoRow('Full name', 'System Admin', theme),
+          Divider(
+            color: colorScheme.onSurface.withValues(alpha: 0.05),
+            height: 24,
+          ),
+          _buildInfoRow('Phone number', '+63 912 345 6789', theme),
+          Divider(
+            color: colorScheme.onSurface.withValues(alpha: 0.05),
+            height: 24,
+          ),
+          _buildInfoRow('Email', 'admin@aeapams.edu.ph', theme),
+          Divider(
+            color: colorScheme.onSurface.withValues(alpha: 0.05),
+            height: 24,
+          ),
+          _buildInfoRow('Username', '@sysadmin_main', theme),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildInfoRow(String label, String value, ThemeData theme) {
+    final colorScheme = theme.colorScheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+        Text(
+          label,
+          style: TextStyle(
+            color: colorScheme.onSurface.withValues(alpha: 0.5),
+            fontSize: 14,
+          ),
+        ),
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.w500,
             fontSize: 14,
           ),
@@ -198,13 +238,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildTabButton(String text, bool isActive) {
+  Widget _buildTabButton(String text, bool isActive, ThemeData theme) {
+    final colorScheme = theme.colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration:
           isActive
               ? BoxDecoration(
-                color: AppColors.primary,
+                color: colorScheme.primary,
                 borderRadius: BorderRadius.circular(25),
               )
               : null,
@@ -212,7 +253,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Text(
           text,
           style: TextStyle(
-            color: isActive ? AppColors.background : Colors.grey,
+            color:
+                isActive
+                    ? colorScheme.onPrimary
+                    : colorScheme.onSurface.withValues(alpha: 0.4),
             fontWeight: FontWeight.bold,
           ),
         ),

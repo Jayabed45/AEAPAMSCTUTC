@@ -14,41 +14,49 @@ class ThemeProvider with ChangeNotifier {
   }
 
   ThemeData get darkTheme => ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: AppColors.background,
-        colorScheme: const ColorScheme.dark(
-          primary: AppColors.primary,
-          secondary: AppColors.secondary,
-          surface: AppColors.surface,
-          onSurface: AppColors.text,
-          background: AppColors.background,
-        ),
-        cardColor: AppColors.card,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.background,
-          elevation: 0,
-        ),
-      );
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    scaffoldBackgroundColor: AppColors.background,
+    colorScheme: const ColorScheme.dark(
+      primary: AppColors.primary,
+      onPrimary: Colors.black,
+      secondary: AppColors.secondary,
+      onSecondary: Colors.black,
+      surface: AppColors.surface,
+      onSurface: AppColors.text,
+      background: AppColors.background,
+    ),
+    cardColor: AppColors.card,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: AppColors.background,
+      elevation: 0,
+    ),
+  );
 
   ThemeData get lightTheme => ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: Colors.white,
-        colorScheme: const ColorScheme.light(
-          primary: AppColors.primary,
-          secondary: AppColors.secondary,
-          surface: Color(0xFFF5F5F5),
-          onSurface: Colors.black,
-          background: Colors.white,
-        ),
-        cardColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          iconTheme: IconThemeData(color: Colors.black),
-          titleTextStyle: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        dividerColor: Colors.black12,
-      );
+    useMaterial3: true,
+    brightness: Brightness.light,
+    scaffoldBackgroundColor: Colors.white,
+    colorScheme: const ColorScheme.light(
+      primary: AppColors.primary,
+      onPrimary: Colors.black,
+      secondary: AppColors.secondary,
+      onSecondary: Colors.black,
+      surface: Color(0xFFF5F5F5),
+      onSurface: Colors.black,
+      background: Colors.white,
+    ),
+    cardColor: Colors.white,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      iconTheme: IconThemeData(color: Colors.black),
+      titleTextStyle: TextStyle(
+        color: Colors.black,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    dividerColor: Colors.black12,
+  );
 }
