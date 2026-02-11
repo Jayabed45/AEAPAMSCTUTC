@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "886955799197",
+    "project_id": "aeapamsctutc",
+    "storage_bucket": "aeapamsctutc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:886955799197:android:1e26f7091d999c59d4da74",
+        "android_client_info": {
+          "package_name": "com.example.aeapamsctutc"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7OOgUHIp8XrcvnBFLG8kR252cWByxJkc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

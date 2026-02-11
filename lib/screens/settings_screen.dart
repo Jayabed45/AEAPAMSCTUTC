@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
 import '../providers/theme_provider.dart';
+import '../controllers/user_controller.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -37,6 +38,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final userController = Provider.of<UserController>(context);
+    final user = userController.user;
     final isDark = themeProvider.isDarkMode;
     final textColor = isDark ? Colors.white : Colors.black;
     final subTextColor = isDark ? Colors.grey[400] : Colors.grey[600];
@@ -83,6 +86,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                 textColor,
                 subTextColor,
                 iconBgColor,
+                user?.fullName ?? 'User',
+                user?.email ?? 'No email',
               ),
               0,
             ),
@@ -276,7 +281,52 @@ class _SettingsScreenState extends State<SettingsScreen>
                   ],
                 ),
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    final shouldLogout = await showDialog<bool>(
+                      context: context,
+                      builder:
+                          (context) => AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            title: Text(
+                              'Log Out',
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            content: Text(
+                              'Are you sure you want to log out?',
+                              style: GoogleFonts.poppins(),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text(
+                                  'Cancel',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: Text(
+                                  'Log Out',
+                                  style: GoogleFonts.poppins(
+                                    color: const Color(0xFFE53935),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                    );
+
+                    if (shouldLogout == true) {
+                      await userController.signOut();
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.transparent,
                     shadowColor: Colors.transparent,
@@ -337,6 +387,8 @@ class _SettingsScreenState extends State<SettingsScreen>
     Color textColor,
     Color? subTextColor,
     Color iconBgColor,
+    String name,
+    String email,
   ) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -363,9 +415,17 @@ class _SettingsScreenState extends State<SettingsScreen>
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.primary, width: 2),
             ),
-            child: const CircleAvatar(
+            child: CircleAvatar(
               radius: 32,
-              backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=11'),
+              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+              child: Text(
+                name.isNotEmpty ? name[0].toUpperCase() : 'U',
+                style: GoogleFonts.poppins(
+                  color: AppColors.primary,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -374,7 +434,7 @@ class _SettingsScreenState extends State<SettingsScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Your Name',
+                  name,
                   style: GoogleFonts.poppins(
                     color: textColor,
                     fontSize: 18,
@@ -383,7 +443,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '@yourname',
+                  email,
                   style: GoogleFonts.poppins(color: subTextColor, fontSize: 14),
                 ),
               ],

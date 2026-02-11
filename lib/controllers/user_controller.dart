@@ -47,6 +47,10 @@ class UserController with ChangeNotifier {
     notifyListeners();
     try {
       await _authService.signUp(email, password);
+      // Immediately sign out after registration so the user has to log in
+      await _authService.signOut();
+      _isLoading = false;
+      notifyListeners();
     } catch (e) {
       _error = e.toString();
       _isLoading = false;
@@ -56,7 +60,14 @@ class UserController with ChangeNotifier {
   }
 
   Future<void> signOut() async {
-    await _authService.signOut();
+    try {
+      await _authService.signOut();
+      _user = null;
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+    }
   }
 
   Future<void> loadUserProfile() async {
