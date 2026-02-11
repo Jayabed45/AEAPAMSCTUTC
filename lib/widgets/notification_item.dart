@@ -8,6 +8,7 @@ class NotificationItem extends StatelessWidget {
   final String description;
   final bool isUnread;
   final Color? iconBackgroundColor;
+  final VoidCallback onTap;
 
   const NotificationItem({
     super.key,
@@ -17,212 +18,142 @@ class NotificationItem extends StatelessWidget {
     required this.description,
     this.isUnread = false,
     this.iconBackgroundColor,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        showModalBottomSheet(
-          context: context,
-          backgroundColor: Colors.transparent,
-          builder:
-              (context) => Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color:
+            isUnread
+                ? (isDark
+                    ? colorScheme.primary.withValues(alpha: 0.08)
+                    : colorScheme.primary.withValues(alpha: 0.04))
+                : theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color:
+              isUnread
+                  ? colorScheme.primary.withValues(alpha: 0.2)
+                  : theme.dividerColor.withValues(alpha: 0.08),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          splashColor: colorScheme.primary.withValues(alpha: 0.05),
+          highlightColor: Colors.transparent,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Unread Indicator Strip
+                if (isUnread)
+                  Container(
+                    width: 4,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        bottomLeft: Radius.circular(16),
+                      ),
+                    ),
                   ),
-                  border:
-                      Theme.of(context).brightness == Brightness.dark
-                          ? null
-                          : Border.all(color: Theme.of(context).dividerColor),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Icon Section
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color:
-                                iconBackgroundColor ??
-                                Theme.of(context).cardColor,
-                            shape: BoxShape.circle,
+                                iconBackgroundColor?.withValues(alpha: 0.2) ??
+                                (isUnread
+                                    ? colorScheme.primary.withValues(
+                                      alpha: 0.15,
+                                    )
+                                    : theme.dividerColor.withValues(
+                                      alpha: 0.1,
+                                    )),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(
-                            icon,
-                            color: Theme.of(context).colorScheme.onSurface,
-                            size: 24,
-                          ),
+                          child: Icon(icon, color: AppColors.primary, size: 20),
                         ),
                         const SizedBox(width: 16),
+                        // Content Section
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                title,
-                                style: TextStyle(
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      title,
+                                      style: theme.textTheme.titleSmall
+                                          ?.copyWith(
+                                            fontWeight:
+                                                isUnread
+                                                    ? FontWeight.bold
+                                                    : FontWeight.w600,
+                                            color: colorScheme.onSurface,
+                                          ),
+                                    ),
+                                  ),
+                                  Text(
+                                    time,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
                               ),
+                              const SizedBox(height: 6),
                               Text(
-                                time,
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface
-                                      .withValues(alpha: 0.5),
-                                  fontSize: 14,
+                                description,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.7,
+                                  ),
+                                  fontSize: 13,
+                                  height: 1.5,
                                 ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Details',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 16,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Close',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-        decoration: BoxDecoration(
-          color:
-              isUnread
-                  ? AppColors.primary.withOpacity(0.05)
-                  : Colors.transparent,
-          border:
-              Theme.of(context).brightness == Brightness.dark
-                  ? null
-                  : Border(
-                    bottom: BorderSide(
-                      color: Theme.of(context).dividerColor,
-                      width: 1,
-                    ),
-                  ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: iconBackgroundColor ?? Theme.of(context).cardColor,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: Theme.of(context).colorScheme.onSurface,
-                size: 24,
-              ),
+              ],
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      if (isUnread) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Text(
-                            'NEW',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    time,
-                    style: TextStyle(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.5),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isUnread)
-              Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                ),
-              ),
-          ],
+          ),
         ),
       ),
     );

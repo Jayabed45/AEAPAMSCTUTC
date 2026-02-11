@@ -26,6 +26,7 @@ class _StatisticChartState extends State<StatisticChart>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+  int? _touchedIndex;
 
   @override
   void initState() {
@@ -82,7 +83,7 @@ class _StatisticChartState extends State<StatisticChart>
                 ),
               ),
               Text(
-                widget.unit,
+                ' ${widget.unit}',
                 style: TextStyle(
                   fontSize: 12,
                   color: widget.lineColor,
@@ -102,8 +103,11 @@ class _StatisticChartState extends State<StatisticChart>
                 // Filter and interpolate spots
                 List<FlSpot> visibleSpots = [];
                 for (int i = 0; i < widget.spots.length; i++) {
-                  if (widget.spots[i].x <= currentX) {
+                  if (widget.spots[i].x < currentX) {
                     visibleSpots.add(widget.spots[i]);
+                  } else if (widget.spots[i].x == currentX) {
+                    visibleSpots.add(widget.spots[i]);
+                    break;
                   } else {
                     // Interpolate the last spot
                     if (i > 0) {
@@ -122,8 +126,101 @@ class _StatisticChartState extends State<StatisticChart>
                   visibleSpots.add(widget.spots.first);
                 }
 
+                final lineChartBarData = LineChartBarData(
+                  spots: visibleSpots,
+                  isCurved: true,
+                  color: widget.lineColor,
+                  barWidth: 3,
+                  isStrokeCapRound: true,
+                  dotData: const FlDotData(show: false),
+                  belowBarData: BarAreaData(
+                    show: true,
+                    color: widget.lineColor.withValues(alpha: 0.1),
+                  ),
+                );
+
                 return LineChart(
                   LineChartData(
+                    lineTouchData: LineTouchData(
+                      handleBuiltInTouches: true,
+                      touchCallback: (FlTouchEvent event, lineTouchResponse) {
+                        if (!event.isInterestedForInteractions ||
+                            lineTouchResponse == null ||
+                            lineTouchResponse.lineBarSpots == null ||
+                            lineTouchResponse.lineBarSpots!.isEmpty) {
+                          return;
+                        }
+                        if (event is FlTapUpEvent) {
+                          final spotIndex =
+                              lineTouchResponse.lineBarSpots!.first.spotIndex;
+                          setState(() {
+                            if (_touchedIndex == spotIndex) {
+                              _touchedIndex = null;
+                            } else {
+                              _touchedIndex = spotIndex;
+                            }
+                          });
+                        }
+                      },
+                      getTouchedSpotIndicator: (
+                        LineChartBarData barData,
+                        List<int> spotIndexes,
+                      ) {
+                        return spotIndexes.map((spotIndex) {
+                          return TouchedSpotIndicatorData(
+                            FlLine(
+                              color: widget.lineColor.withValues(alpha: 0.5),
+                              strokeWidth: 2,
+                              dashArray: [5, 5],
+                            ),
+                            FlDotData(
+                              getDotPainter: (spot, percent, barData, index) {
+                                return FlDotCirclePainter(
+                                  radius: 6,
+                                  color: widget.lineColor,
+                                  strokeWidth: 3,
+                                  strokeColor: Colors.white,
+                                );
+                              },
+                            ),
+                          );
+                        }).toList();
+                      },
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipColor:
+                            (touchedSpot) => Theme.of(context).cardColor,
+                        tooltipBorderRadius: BorderRadius.circular(8),
+                        tooltipPadding: const EdgeInsets.all(8),
+                        tooltipBorder: BorderSide(
+                          color: Theme.of(context).dividerColor,
+                        ),
+                        getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+                          return touchedBarSpots.map((barSpot) {
+                            return LineTooltipItem(
+                              '${barSpot.y.toStringAsFixed(1)} ${widget.unit}',
+                              TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            );
+                          }).toList();
+                        },
+                      ),
+                    ),
+                    showingTooltipIndicators:
+                        _touchedIndex != null &&
+                                _touchedIndex! < visibleSpots.length
+                            ? [
+                              ShowingTooltipIndicators([
+                                LineBarSpot(
+                                  lineChartBarData,
+                                  0,
+                                  visibleSpots[_touchedIndex!],
+                                ),
+                              ]),
+                            ]
+                            : [],
                     minX: minX,
                     maxX: maxX,
                     minY: 0,
@@ -173,20 +270,7 @@ class _StatisticChartState extends State<StatisticChart>
                       ),
                     ),
                     borderData: FlBorderData(show: false),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: visibleSpots,
-                        isCurved: true,
-                        color: widget.lineColor,
-                        barWidth: 3,
-                        isStrokeCapRound: true,
-                        dotData: const FlDotData(show: false),
-                        belowBarData: BarAreaData(
-                          show: true,
-                          color: widget.lineColor.withValues(alpha: 0.1),
-                        ),
-                      ),
-                    ],
+                    lineBarsData: [lineChartBarData],
                   ),
                 );
               },

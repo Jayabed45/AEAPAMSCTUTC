@@ -13,6 +13,7 @@ class _CombinedChartsSectionState extends State<CombinedChartsSection>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+  int? _touchedIndex;
 
   final List<FlSpot> voltageSpots = const [
     FlSpot(6, 20),
@@ -67,8 +68,11 @@ class _CombinedChartsSectionState extends State<CombinedChartsSection>
 
     List<FlSpot> visibleSpots = [];
     for (int i = 0; i < allSpots.length; i++) {
-      if (allSpots[i].x <= currentX) {
+      if (allSpots[i].x < currentX) {
         visibleSpots.add(allSpots[i]);
+      } else if (allSpots[i].x == currentX) {
+        visibleSpots.add(allSpots[i]);
+        break;
       } else {
         // Interpolate the last spot
         if (i > 0) {
@@ -142,6 +146,52 @@ class _CombinedChartsSectionState extends State<CombinedChartsSection>
             child: AnimatedBuilder(
               animation: _animation,
               builder: (context, child) {
+                final visibleVoltageSpots = _getVisibleSpots(
+                  voltageSpots,
+                  _animation.value,
+                );
+                final visibleCurrentSpots = _getVisibleSpots(
+                  currentSpots,
+                  _animation.value,
+                );
+                final visibleEnergySpots = _getVisibleSpots(
+                  energySpots,
+                  _animation.value,
+                );
+
+                final voltageBar = LineChartBarData(
+                  spots: visibleVoltageSpots,
+                  isCurved: true,
+                  color: AppColors.primary,
+                  barWidth: 3,
+                  isStrokeCapRound: true,
+                  dotData: const FlDotData(show: false),
+                  belowBarData: BarAreaData(
+                    show: true,
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                  ),
+                );
+
+                final currentBar = LineChartBarData(
+                  spots: visibleCurrentSpots,
+                  isCurved: true,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  barWidth: 3,
+                  isStrokeCapRound: true,
+                  dotData: const FlDotData(show: false),
+                  belowBarData: BarAreaData(show: false),
+                );
+
+                final energyBar = LineChartBarData(
+                  spots: visibleEnergySpots,
+                  isCurved: true,
+                  color: AppColors.secondary,
+                  barWidth: 3,
+                  isStrokeCapRound: true,
+                  dotData: const FlDotData(show: false),
+                  belowBarData: BarAreaData(show: false),
+                );
+
                 return LineChart(
                   LineChartData(
                     gridData: FlGridData(
@@ -207,48 +257,38 @@ class _CombinedChartsSectionState extends State<CombinedChartsSection>
                     maxX: 10,
                     minY: 0,
                     maxY: 45, // Accommodate max voltage (~35)
-                    lineBarsData: [
-                      // Voltage (Yellow)
-                      LineChartBarData(
-                        spots: _getVisibleSpots(voltageSpots, _animation.value),
-                        isCurved: true,
-                        color: AppColors.primary,
-                        barWidth: 3,
-                        isStrokeCapRound: true,
-                        dotData: const FlDotData(show: false),
-                        belowBarData: BarAreaData(
-                          show: true,
-                          color: AppColors.primary.withOpacity(0.1),
-                        ),
-                      ),
-                      // Current (White)
-                      LineChartBarData(
-                        spots: _getVisibleSpots(currentSpots, _animation.value),
-                        isCurved: true,
-                        color: Theme.of(context).colorScheme.onSurface,
-                        barWidth: 3,
-                        isStrokeCapRound: true,
-                        dotData: const FlDotData(show: false),
-                        belowBarData: BarAreaData(show: false),
-                      ),
-                      // Energy (Light Yellow)
-                      LineChartBarData(
-                        spots: _getVisibleSpots(energySpots, _animation.value),
-                        isCurved: true,
-                        color: AppColors.secondary,
-                        barWidth: 3,
-                        isStrokeCapRound: true,
-                        dotData: const FlDotData(show: false),
-                        belowBarData: BarAreaData(show: false),
-                      ),
-                    ],
+                    lineBarsData: [voltageBar, currentBar, energyBar],
                     lineTouchData: LineTouchData(
+                      handleBuiltInTouches: true,
+                      touchCallback: (FlTouchEvent event, lineTouchResponse) {
+                        if (!event.isInterestedForInteractions ||
+                            lineTouchResponse == null ||
+                            lineTouchResponse.lineBarSpots == null ||
+                            lineTouchResponse.lineBarSpots!.isEmpty) {
+                          return;
+                        }
+                        if (event is FlTapUpEvent) {
+                          final spotIndex =
+                              lineTouchResponse.lineBarSpots!.first.spotIndex;
+                          setState(() {
+                            if (_touchedIndex == spotIndex) {
+                              _touchedIndex = null;
+                            } else {
+                              _touchedIndex = spotIndex;
+                            }
+                          });
+                        }
+                      },
                       touchTooltipData: LineTouchTooltipData(
                         getTooltipColor:
                             (touchedSpot) => Theme.of(context).cardColor,
+                        tooltipBorderRadius: BorderRadius.circular(8),
+                        tooltipPadding: const EdgeInsets.all(8),
+                        tooltipBorder: BorderSide(
+                          color: Theme.of(context).dividerColor,
+                        ),
                         getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                           return touchedBarSpots.map((barSpot) {
-                            final flSpot = barSpot;
                             String unit = '';
 
                             // Identify series by color or index
@@ -260,7 +300,7 @@ class _CombinedChartsSectionState extends State<CombinedChartsSection>
                               unit = 'kWh';
 
                             return LineTooltipItem(
-                              '${flSpot.y} $unit',
+                              '${barSpot.y.toStringAsFixed(1)} $unit',
                               TextStyle(
                                 color:
                                     barSpot.bar.color ??
@@ -272,6 +312,29 @@ class _CombinedChartsSectionState extends State<CombinedChartsSection>
                         },
                       ),
                     ),
+                    showingTooltipIndicators:
+                        _touchedIndex != null &&
+                                _touchedIndex! < visibleVoltageSpots.length
+                            ? [
+                              ShowingTooltipIndicators([
+                                LineBarSpot(
+                                  voltageBar,
+                                  0,
+                                  visibleVoltageSpots[_touchedIndex!],
+                                ),
+                                LineBarSpot(
+                                  currentBar,
+                                  1,
+                                  visibleCurrentSpots[_touchedIndex!],
+                                ),
+                                LineBarSpot(
+                                  energyBar,
+                                  2,
+                                  visibleEnergySpots[_touchedIndex!],
+                                ),
+                              ]),
+                            ]
+                            : [],
                   ),
                 );
               },
