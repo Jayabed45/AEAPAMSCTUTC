@@ -348,10 +348,16 @@ class _HomeScreenState extends State<HomeScreen>
         height: 80,
         title: Row(
           children: [
-            Icon(
-              Icons.wb_sunny,
-              color: Theme.of(context).colorScheme.onSurface,
-              size: 40,
+            Image.asset(
+              'assets/images/logo.png',
+              height: 45,
+              errorBuilder: (context, error, stackTrace) {
+                return Icon(
+                  Icons.wb_sunny,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  size: 40,
+                );
+              },
             ),
             const SizedBox(width: 12),
             Expanded(

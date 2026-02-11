@@ -2,15 +2,21 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/system_data_model.dart';
 import '../services/api_service.dart';
+import '../services/notification_service.dart';
 import '../utils/mock_data_util.dart';
 
 class SystemController with ChangeNotifier {
   final ApiService _apiService = ApiService();
+  final NotificationService _notificationService = NotificationService();
 
   SystemDataModel? _systemData;
   bool _isLoading = false;
   String? _error;
   StreamSubscription<SystemDataModel>? _subscription;
+
+  // Track last alert time to prevent spamming
+  final Map<String, DateTime> _lastAlertTime = {};
+  static const _alertCooldown = Duration(minutes: 5);
 
   SystemDataModel? get systemData => _systemData;
   bool get isLoading => _isLoading;
@@ -154,14 +160,34 @@ class SystemController with ChangeNotifier {
     }
   }
 
-  void _triggerSystemNotification(String title, String body) {
-    // In a real app, this would be triggered by a Cloud Function
-    // monitoring Firestore. Here we simulate the local saving of
-    // the notification which would happen if an FCM message arrived.
-    // We don't want to spam notifications every second if data is streaming,
-    // so in a real scenario, logic to prevent duplicate alerts would be needed.
+  void _triggerSystemNotification(String title, String body) async {
+    // Prevent spamming the same alert too frequently
+    final now = DateTime.now();
+    if (_lastAlertTime.containsKey(title)) {
+      if (now.difference(_lastAlertTime[title]!) < _alertCooldown) {
+        return;
+      }
+    }
+    _lastAlertTime[title] = now;
 
-    // For demonstration, we'll log it.
-    debugPrint('SYSTEM ALERT: $title - $body');
+    // 1. Show local pop-up notification
+    await _notificationService.showManualNotification(title: title, body: body);
+
+    // 2. Save to Firestore notification history
+    try {
+      final iconName = _notificationService.getIconForTitle(title);
+      final iconColorHex = _notificationService.getColorForTitle(title);
+
+      await _apiService.addNotification(
+        title: title,
+        description: body,
+        iconName: iconName,
+        iconColorHex: iconColorHex,
+      );
+    } catch (e) {
+      debugPrint('Failed to auto-save anomaly notification: $e');
+    }
+
+    debugPrint('SYSTEM ALERT TRIGGERED: $title - $body');
   }
 }

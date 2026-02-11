@@ -20,19 +20,50 @@ class NotificationService {
       alert: true,
       badge: true,
       sound: true,
+      provisional: false,
+      criticalAlert: true,
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       print('User granted permission');
     }
-
+                                                                                                                                                                                                            
     // 2. Setup Local Notifications for Foreground
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
 
+    // Create high importance channel for Android
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'high_importance_channel', // id
+      'High Importance Notifications', // title
+      description:
+          'This channel is used for important system alerts.', // description
+      importance: Importance.max,
+      playSound: true,
+      enableVibration: true,
+      showBadge: true,
+    );
+
+    final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+        FlutterLocalNotificationsPlugin();
+
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(channel);
+
     await _localNotifications.initialize(initializationSettings);
+
+    // Update FCM foreground presentation options
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
 
     // 3. Handle Messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -71,6 +102,31 @@ class NotificationService {
     );
   }
 
+  // Trigger a notification manually (for system anomalies)
+  Future<void> showManualNotification({
+    required String title,
+    required String body,
+  }) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+          'high_importance_channel',
+          'High Importance Notifications',
+          importance: Importance.max,
+          priority: Priority.high,
+          showWhen: true,
+        );
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+
+    await _localNotifications.show(
+      DateTime.now().millisecond,
+      title,
+      body,
+      platformChannelSpecifics,
+    );
+  }
+
   Future<void> _saveNotificationToFirestore(RemoteMessage message) async {
     try {
       await _firestore.collection('notifications').add({
@@ -78,8 +134,8 @@ class NotificationService {
         'description': message.notification?.body ?? '',
         'time': DateFormat('hh:mm a').format(DateTime.now()),
         'is_unread': true,
-        'icon_name': _getIconForTitle(message.notification?.title ?? ''),
-        'icon_color_hex': _getColorForTitle(message.notification?.title ?? ''),
+        'icon_name': getIconForTitle(message.notification?.title ?? ''),
+        'icon_color_hex': getColorForTitle(message.notification?.title ?? ''),
         'timestamp': FieldValue.serverTimestamp(),
       });
     } catch (e) {
@@ -87,7 +143,7 @@ class NotificationService {
     }
   }
 
-  String _getIconForTitle(String title) {
+  String getIconForTitle(String title) {
     title = title.toLowerCase();
     if (title.contains('temperature')) return 'thermostat_rounded';
     if (title.contains('water')) return 'water_drop_rounded';
@@ -98,7 +154,7 @@ class NotificationService {
     return 'notifications';
   }
 
-  String _getColorForTitle(String title) {
+  String getColorForTitle(String title) {
     title = title.toLowerCase();
     if (title.contains('high') ||
         title.contains('critical') ||

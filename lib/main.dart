@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'main_screen.dart';
 import 'screens/auth_screen.dart';
+import 'screens/splash_screen.dart';
 import 'providers/theme_provider.dart';
 import 'controllers/system_controller.dart';
 import 'controllers/notification_controller.dart';
@@ -54,9 +55,7 @@ class MyApp extends StatelessWidget {
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
+            return const SplashScreen();
           }
           if (snapshot.hasData) {
             return const MainScreen();
