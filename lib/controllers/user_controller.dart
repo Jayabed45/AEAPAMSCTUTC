@@ -15,6 +15,7 @@ class UserController with ChangeNotifier {
   String? _error;
 
   UserModel? get user => _user;
+  String? get userEmail => _user?.email ?? _authService.currentUser?.email;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isAuthenticated => _authService.currentUser != null;

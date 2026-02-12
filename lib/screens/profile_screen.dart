@@ -42,14 +42,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings, color: colorScheme.onSurface),
-            onPressed: () {
-              // Navigate to settings if needed, or just a placeholder
-            },
-          ),
-        ],
       ),
       body: Consumer<UserController>(
         builder: (context, controller, child) {
@@ -58,6 +50,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
 
           final user = controller.user;
+          final email = controller.userEmail ?? 'No email';
+          final username = email != 'No email' ? email.split('@')[0] : 'User';
 
           return RefreshIndicator(
             onRefresh: () => controller.loadUserProfile(),
@@ -85,7 +79,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   width: 2,
                                 ),
                                 image:
-                                    user != null
+                                    (user != null &&
+                                            user.profileImageUrl.isNotEmpty)
                                         ? DecorationImage(
                                           image: NetworkImage(
                                             user.profileImageUrl,
@@ -94,14 +89,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         )
                                         : null,
                               ),
-                              // Fallback icon if image fails
+                              // Fallback initials if image fails or user is null
                               child:
-                                  user == null
-                                      ? Icon(
-                                        Icons.person,
-                                        size: 60,
-                                        color: colorScheme.onSurface.withValues(
-                                          alpha: 0.5,
+                                  (user == null || user.profileImageUrl.isEmpty)
+                                      ? Center(
+                                        child: Text(
+                                          _getInitials(
+                                            user?.fullName,
+                                            user?.username,
+                                            email,
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: 32,
+                                            fontWeight: FontWeight.bold,
+                                            color: colorScheme.primary,
+                                          ),
                                         ),
                                       )
                                       : null,
@@ -124,12 +126,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              user?.fullName ?? 'Loading...',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onSurface,
+                            Flexible(
+                              child: Text(
+                                user?.fullName ?? user?.username ?? username,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onSurface,
+                                ),
                               ),
                             ),
                             if (user?.isVerified ?? false) ...[
@@ -217,7 +223,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildProfileInfo(ThemeData theme, UserController controller) {
     final colorScheme = theme.colorScheme;
-    final user = controller.user;
+    final email = controller.userEmail ?? 'No email';
+    final username = email != 'No email' ? email.split('@')[0] : 'No username';
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -230,22 +237,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         children: [
-          _buildInfoRow('Full name', user?.fullName ?? '-', theme),
+          _buildInfoRow('Email', email, theme),
           Divider(
             color: colorScheme.onSurface.withValues(alpha: 0.05),
             height: 24,
           ),
-          _buildInfoRow('Phone number', user?.phoneNumber ?? '-', theme),
-          Divider(
-            color: colorScheme.onSurface.withValues(alpha: 0.05),
-            height: 24,
-          ),
-          _buildInfoRow('Email', user?.email ?? '-', theme),
-          Divider(
-            color: colorScheme.onSurface.withValues(alpha: 0.05),
-            height: 24,
-          ),
-          _buildInfoRow('Username', user?.username ?? '-', theme),
+          _buildInfoRow('Username', username, theme),
         ],
       ),
     );
@@ -263,12 +260,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
             fontSize: 14,
           ),
         ),
-        Text(
-          value,
-          style: TextStyle(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
+        const SizedBox(width: 16),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+            ),
           ),
         ),
       ],
@@ -299,5 +302,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  String _getInitials(String? fullName, String? username, String? email) {
+    if (fullName != null &&
+        fullName.isNotEmpty &&
+        fullName != 'Loading...' &&
+        fullName != 'User') {
+      List<String> names = fullName.trim().split(' ');
+      if (names.length >= 2) {
+        if (names[0].isNotEmpty && names[1].isNotEmpty) {
+          return (names[0][0] + names[1][0]).toUpperCase();
+        }
+      } else if (names.isNotEmpty && names[0].isNotEmpty) {
+        return names[0][0].toUpperCase();
+      }
+    }
+    if (username != null &&
+        username.isNotEmpty &&
+        username != 'User' &&
+        username != 'Loading...') {
+      return username[0].toUpperCase();
+    }
+    if (email != null && email.isNotEmpty && email != 'No email') {
+      return email[0].toUpperCase();
+    }
+    return '?';
   }
 }

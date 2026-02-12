@@ -27,6 +27,11 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
 
     _animationController.forward();
+
+    // Fetch latest user data from Firebase when settings opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<UserController>(context, listen: false).loadUserProfile();
+    });
   }
 
   @override
@@ -40,6 +45,10 @@ class _SettingsScreenState extends State<SettingsScreen>
     final themeProvider = Provider.of<ThemeProvider>(context);
     final userController = Provider.of<UserController>(context);
     final user = userController.user;
+    final email = userController.userEmail ?? 'No email';
+    final username = email != 'No email' ? email.split('@')[0] : 'User';
+    final fullName = user?.fullName ?? username;
+
     final isDark = themeProvider.isDarkMode;
     final textColor = isDark ? Colors.white : Colors.black;
     final subTextColor = isDark ? Colors.grey[400] : Colors.grey[600];
@@ -86,67 +95,15 @@ class _SettingsScreenState extends State<SettingsScreen>
                 textColor,
                 subTextColor,
                 iconBgColor,
-                user?.fullName ?? 'User',
-                user?.email ?? 'No email',
-                user?.username ?? 'No username',
+                fullName,
+                email,
+                username,
               ),
               0,
             ),
             const SizedBox(height: 24),
 
             // Settings Sections
-            _buildAnimatedItem(
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSectionHeader('Preferences', subTextColor),
-                  const SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: cardColor,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: borderColor),
-                      boxShadow:
-                          isDark
-                              ? []
-                              : [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                    ),
-                    child: Column(
-                      children: [
-                        _buildSwitchTile(
-                          icon: Icons.notifications_outlined,
-                          title: 'Pause notifications',
-                          value: _pauseNotifications,
-                          onChanged:
-                              (value) =>
-                                  setState(() => _pauseNotifications = value),
-                          textColor: textColor,
-                          iconBgColor: iconBgColor,
-                          activeTrackColor: AppColors.primary,
-                        ),
-                        _buildDivider(borderColor),
-                        _buildListTile(
-                          icon: Icons.tune,
-                          title: 'General settings',
-                          onTap: () {},
-                          textColor: textColor,
-                          iconBgColor: iconBgColor,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              1,
-            ),
-            const SizedBox(height: 24),
-
             _buildAnimatedItem(
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,71 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   ),
                 ],
               ),
-              2,
-            ),
-            const SizedBox(height: 24),
-
-            _buildAnimatedItem(
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSectionHeader('Support', subTextColor),
-                  const SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: cardColor,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: borderColor),
-                      boxShadow:
-                          isDark
-                              ? []
-                              : [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                    ),
-                    child: Column(
-                      children: [
-                        _buildListTile(
-                          icon: Icons.help_outline,
-                          title: 'FAQ',
-                          onTap: () {},
-                          textColor: textColor,
-                          iconBgColor: iconBgColor,
-                        ),
-                        _buildDivider(borderColor),
-                        _buildListTile(
-                          icon: Icons.info_outline,
-                          title: 'Terms of service',
-                          onTap: () {},
-                          textColor: textColor,
-                          iconBgColor: iconBgColor,
-                        ),
-                        _buildDivider(borderColor),
-                        _buildListTile(
-                          icon: Icons.privacy_tip_outlined,
-                          title: 'User policy',
-                          onTap: () {},
-                          textColor: textColor,
-                          iconBgColor: iconBgColor,
-                        ),
-                        _buildDivider(borderColor),
-                        _buildListTile(
-                          icon: Icons.people_outline,
-                          title: 'My Contact',
-                          onTap: () {},
-                          textColor: textColor,
-                          iconBgColor: iconBgColor,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              3,
+              1,
             ),
             const SizedBox(height: 40),
 
@@ -437,6 +330,8 @@ class _SettingsScreenState extends State<SettingsScreen>
               children: [
                 Text(
                   name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.poppins(
                     color: textColor,
                     fontSize: 18,
@@ -445,16 +340,20 @@ class _SettingsScreenState extends State<SettingsScreen>
                 ),
                 Text(
                   '@$username',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.poppins(
                     color: AppColors.primary,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   email,
-                  style: GoogleFonts.poppins(color: subTextColor, fontSize: 14),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(color: subTextColor, fontSize: 12),
                 ),
               ],
             ),
