@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_model.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
@@ -21,7 +22,7 @@ class UserController with ChangeNotifier {
   UserController() {
     _authService.authStateChanges.listen((firebaseUser) {
       if (firebaseUser != null) {
-        loadUserProfile();
+        loadUserProfile(firebaseUser.uid);
       } else {
         _user = null;
         notifyListeners();
@@ -41,11 +42,19 @@ class UserController with ChangeNotifier {
       if (token != null) {
         await NotificationService().saveTokenToDatabase(token);
       }
+    } on FirebaseAuthException catch (e) {
+      _error = e.code;
+      _isLoading = false;
+      notifyListeners();
+      rethrow;
     } catch (e) {
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
       rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
@@ -54,7 +63,24 @@ class UserController with ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      await _authService.signUp(email, password);
+      final credential = await _authService.signUp(email, password);
+      if (credential != null && credential.user != null) {
+        // Generate username from email (remove everything after @)
+        String username = email.split('@')[0];
+
+        // Create initial user profile in Firestore
+        final newUser = UserModel(
+          fullName: username, // Use username as default full name
+          phoneNumber: '',
+          email: email,
+          username: username,
+          profileImageUrl: 'https://i.pravatar.cc/300',
+          role: 'User',
+          organization: 'AEAPAMSCTUTC',
+        );
+
+        await _apiService.createUserProfile(credential.user!.uid, newUser);
+      }
       // Immediately sign out after registration so the user has to log in
       await _authService.signOut();
       _isLoading = false;
@@ -78,13 +104,16 @@ class UserController with ChangeNotifier {
     }
   }
 
-  Future<void> loadUserProfile() async {
+  Future<void> loadUserProfile([String? uid]) async {
+    final targetUid = uid ?? _authService.currentUser?.uid;
+    if (targetUid == null) return;
+
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _user = await _apiService.fetchUserProfile();
+      _user = await _apiService.fetchUserProfile(targetUid);
     } catch (e) {
       _error = e.toString();
     } finally {

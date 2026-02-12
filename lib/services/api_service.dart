@@ -69,12 +69,9 @@ class ApiService {
   }
 
   // --- User Profile ---
-  Future<UserModel> fetchUserProfile() async {
+  Future<UserModel> fetchUserProfile(String uid) async {
     try {
-      // Assuming user profile is stored in 'users' collection with a specific ID
-      // In a real app, you'd use the current user's UID from Firebase Auth
-      final doc =
-          await _firestore.collection('users').doc('default_user').get();
+      final doc = await _firestore.collection('users').doc(uid).get();
 
       if (doc.exists) {
         return UserModel.fromJson(doc.data()!);
@@ -83,6 +80,14 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Failed to load profile from Firebase: $e');
+    }
+  }
+
+  Future<void> createUserProfile(String uid, UserModel user) async {
+    try {
+      await _firestore.collection('users').doc(uid).set(user.toJson());
+    } catch (e) {
+      throw Exception('Failed to create user profile: $e');
     }
   }
 

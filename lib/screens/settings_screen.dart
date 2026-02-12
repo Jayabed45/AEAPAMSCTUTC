@@ -88,6 +88,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                 iconBgColor,
                 user?.fullName ?? 'User',
                 user?.email ?? 'No email',
+                user?.username ?? 'No username',
               ),
               0,
             ),
@@ -389,6 +390,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     Color iconBgColor,
     String name,
     String email,
+    String username,
   ) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -439,6 +441,14 @@ class _SettingsScreenState extends State<SettingsScreen>
                     color: textColor,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  '@$username',
+                  style: GoogleFonts.poppins(
+                    color: AppColors.primary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 4),
