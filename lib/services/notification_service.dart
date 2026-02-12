@@ -27,7 +27,7 @@ class NotificationService {
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       print('User granted permission');
     }
-                                                                                                                                                                                                            
+
     // 2. Setup Local Notifications for Foreground
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -158,10 +158,12 @@ class NotificationService {
     title = title.toLowerCase();
     if (title.contains('high') ||
         title.contains('critical') ||
-        title.contains('alert'))
+        title.contains('alert')) {
       return '#F44336'; // Red
-    if (title.contains('warning') || title.contains('caution'))
+    }
+    if (title.contains('warning') || title.contains('caution')) {
       return '#FF9800'; // Orange
+    }
     return '#2196F3'; // Blue
   }
 }
