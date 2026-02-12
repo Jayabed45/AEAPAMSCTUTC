@@ -91,6 +91,20 @@ class ApiService {
     }
   }
 
+  Future<void> updateUserProfile(String uid, Map<String, dynamic> data) async {
+    try {
+      // Use set with SetOptions(merge: true) instead of update
+      // This ensures the document is created if it doesn't exist,
+      // and only updates the provided fields if it does.
+      await _firestore
+          .collection('users')
+          .doc(uid)
+          .set(data, SetOptions(merge: true));
+    } catch (e) {
+      throw Exception('Failed to update user profile: $e');
+    }
+  }
+
   // Helper method to mark notification as read in Firebase
   Future<void> markNotificationAsRead(String id) async {
     await _firestore.collection('notifications').doc(id).update({

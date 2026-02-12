@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
 import '../providers/theme_provider.dart';
 import '../controllers/user_controller.dart';
+import 'edit_profile_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -46,8 +47,14 @@ class _SettingsScreenState extends State<SettingsScreen>
     final userController = Provider.of<UserController>(context);
     final user = userController.user;
     final email = userController.userEmail ?? 'No email';
-    final username = email != 'No email' ? email.split('@')[0] : 'User';
-    final fullName = user?.fullName ?? username;
+    final username =
+        (user?.username != null && user!.username.isNotEmpty)
+            ? user.username
+            : (email != 'No email' ? email.split('@')[0] : 'User');
+    final fullName =
+        (user?.fullName != null && user!.fullName.isNotEmpty)
+            ? user.fullName
+            : username;
 
     final isDark = themeProvider.isDarkMode;
     final textColor = isDark ? Colors.white : Colors.black;
@@ -358,13 +365,23 @@ class _SettingsScreenState extends State<SettingsScreen>
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: iconBgColor,
-              borderRadius: BorderRadius.circular(12),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EditProfileScreen(),
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.edit_outlined, color: textColor, size: 20),
             ),
-            child: Icon(Icons.edit_outlined, color: textColor, size: 20),
           ),
         ],
       ),

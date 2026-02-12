@@ -105,6 +105,42 @@ class UserController with ChangeNotifier {
     }
   }
 
+  Future<void> updateUserProfile({
+    String? email,
+    String? username,
+    String? fullName,
+  }) async {
+    final uid = _authService.currentUser?.uid;
+    if (uid == null) return;
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final Map<String, dynamic> updates = {};
+      if (username != null) updates['username'] = username;
+      if (fullName != null) updates['full_name'] = fullName;
+
+      // Handle email update separately as it involves Auth
+      if (email != null && email != _authService.currentUser?.email) {
+        await _authService.updateEmail(email);
+        updates['email'] = email;
+      }
+
+      if (updates.isNotEmpty) {
+        await _apiService.updateUserProfile(uid, updates);
+        await loadUserProfile(uid);
+      }
+    } catch (e) {
+      _error = e.toString();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> loadUserProfile([String? uid]) async {
     final targetUid = uid ?? _authService.currentUser?.uid;
     if (targetUid == null) return;

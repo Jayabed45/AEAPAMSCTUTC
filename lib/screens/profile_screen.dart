@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/profile_combined_chart.dart';
 import '../controllers/user_controller.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -68,56 +69,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           alignment: Alignment.bottomRight,
                           children: [
                             Container(
-                              width: 100,
-                              height: 100,
+                              padding: const EdgeInsets.all(3),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: colorScheme.onSurface.withValues(
-                                    alpha: 0.1,
-                                  ),
+                                  color: colorScheme.primary,
                                   width: 2,
                                 ),
-                                image:
-                                    (user != null &&
-                                            user.profileImageUrl.isNotEmpty)
-                                        ? DecorationImage(
-                                          image: NetworkImage(
-                                            user.profileImageUrl,
-                                          ),
-                                          fit: BoxFit.cover,
-                                        )
-                                        : null,
                               ),
-                              // Fallback initials if image fails or user is null
-                              child:
-                                  (user == null || user.profileImageUrl.isEmpty)
-                                      ? Center(
-                                        child: Text(
-                                          _getInitials(
-                                            user?.fullName,
-                                            user?.username,
-                                            email,
-                                          ),
-                                          style: TextStyle(
-                                            fontSize: 32,
-                                            fontWeight: FontWeight.bold,
-                                            color: colorScheme.primary,
-                                          ),
-                                        ),
-                                      )
-                                      : null,
+                              child: CircleAvatar(
+                                radius: 45,
+                                backgroundColor: colorScheme.primary
+                                    .withOpacity(0.1),
+                                child: Text(
+                                  _getInitials(
+                                    user?.fullName,
+                                    user?.username,
+                                    email,
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.primary,
+                                  ),
+                                ),
+                              ),
                             ),
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: colorScheme.primary,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.edit,
-                                size: 16,
-                                color: colorScheme.onPrimary,
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => const EditProfileScreen(),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.edit,
+                                  size: 16,
+                                  color: colorScheme.onPrimary,
+                                ),
                               ),
                             ),
                           ],

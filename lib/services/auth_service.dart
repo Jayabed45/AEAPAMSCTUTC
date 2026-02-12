@@ -38,6 +38,22 @@ class AuthService {
     await _auth.signOut();
   }
 
+  // Update email
+  Future<void> updateEmail(String newEmail) async {
+    try {
+      // Use updateEmail for immediate change. Note: might require recent login.
+      // If this fails with 'requires-recent-login', you may need to re-authenticate.
+      await _auth.currentUser?.updateEmail(newEmail);
+    } catch (e) {
+      // Fallback to verification if updateEmail fails or is restricted
+      try {
+        await _auth.currentUser?.verifyBeforeUpdateEmail(newEmail);
+      } catch (innerError) {
+        rethrow;
+      }
+    }
+  }
+
   // Password reset
   Future<void> sendPasswordResetEmail(String email) async {
     await _auth.sendPasswordResetEmail(email: email);
