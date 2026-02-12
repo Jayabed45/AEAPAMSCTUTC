@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
-import 'screens/graphs_screen.dart';
 import 'screens/alerts_screen.dart';
 import 'screens/settings_screen.dart';
 import 'widgets/custom_animated_nav_bar.dart';
@@ -17,7 +16,6 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const GraphsScreen(),
     const AlertsScreen(),
     const SettingsScreen(),
   ];
@@ -41,11 +39,6 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icons.home_outlined,
             selectedIcon: Icons.home,
             label: 'Home',
-          ),
-          CustomNavBarItem(
-            icon: Icons.show_chart,
-            selectedIcon: Icons.show_chart,
-            label: 'Graphs',
           ),
           CustomNavBarItem(
             icon: Icons.notifications_outlined,

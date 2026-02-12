@@ -11,7 +11,6 @@ import 'providers/theme_provider.dart';
 import 'controllers/system_controller.dart';
 import 'controllers/notification_controller.dart';
 import 'controllers/user_controller.dart';
-import 'controllers/statistics_controller.dart';
 import 'services/notification_service.dart';
 
 // Background message handler
@@ -61,7 +60,6 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => SystemController()),
         ChangeNotifierProvider(create: (_) => NotificationController()),
         ChangeNotifierProvider(create: (_) => UserController()),
-        ChangeNotifierProvider(create: (_) => StatisticsController()),
       ],
       child: const MyApp(),
     ),
