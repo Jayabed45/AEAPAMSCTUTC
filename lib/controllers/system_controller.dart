@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../models/system_data_model.dart';
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
-import '../utils/mock_data_util.dart';
 
 class SystemController with ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -12,7 +11,7 @@ class SystemController with ChangeNotifier {
   SystemDataModel? _systemData;
   bool _isLoading = false;
   String? _error;
-  StreamSubscription<SystemDataModel>? _subscription;
+  StreamSubscription<SystemDataModel?>? _subscription;
 
   // Track last alert time to prevent spamming
   final Map<String, DateTime> _lastAlertTime = {};
@@ -30,8 +29,10 @@ class SystemController with ChangeNotifier {
     _isLoading = true;
     _subscription = _apiService.getSystemDataStream().listen(
       (data) {
-        // Check for anomalies before updating state
-        _checkSystemAnomalies(data);
+        if (data != null) {
+          // Check for anomalies before updating state
+          _checkSystemAnomalies(data);
+        }
 
         _systemData = data;
         _isLoading = false;
@@ -73,15 +74,6 @@ class SystemController with ChangeNotifier {
     }
   }
 
-  Future<void> simulateDataUpdate({int? hour}) async {
-    try {
-      await MockDataUtil.insertMockSystemData(hour: hour);
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-
   Future<void> updateData(
     SystemDataModel data, {
     DateTime? customTimestamp,
@@ -95,19 +87,6 @@ class SystemController with ChangeNotifier {
       _error = e.toString();
       notifyListeners();
       rethrow;
-    }
-  }
-
-  Future<void> generateFullDayData() async {
-    _isLoading = true;
-    notifyListeners();
-    try {
-      await MockDataUtil.simulateFullDay();
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
     }
   }
 

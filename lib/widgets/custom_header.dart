@@ -5,12 +5,14 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
   final Widget title;
   final double height;
   final VoidCallback? onProfilePressed;
+  final List<Widget>? actions;
 
   const CustomHeader({
     super.key,
     required this.title,
     this.height = kToolbarHeight,
     this.onProfilePressed,
+    this.actions,
   });
 
   @override
@@ -19,37 +21,36 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
       title: title,
       backgroundColor: Colors.transparent,
       elevation: 0,
-      automaticallyImplyLeading:
-          false, // Prevent default back button if we don't want it, but usually we do if navigating.
-      // However, for main tabs, there's no back button.
-      // For HomeScreen, the title is complex.
-      titleSpacing: 16, // Match default padding
-      actions: [
-        IconButton(
-          onPressed: () {},
-          icon: Icon(
-            Icons.notifications,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        IconButton(
-          onPressed:
-              onProfilePressed ??
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProfileScreen(),
-                  ),
-                );
-              },
-          icon: Icon(
-            Icons.account_circle,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        const SizedBox(width: 16),
-      ],
+      automaticallyImplyLeading: false,
+      titleSpacing: 16,
+      actions:
+          actions ??
+          [
+            IconButton(
+              onPressed: () {},
+              icon: Icon(
+                Icons.notifications,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            IconButton(
+              onPressed:
+                  onProfilePressed ??
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileScreen(),
+                      ),
+                    );
+                  },
+              icon: Icon(
+                Icons.account_circle,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(width: 16),
+          ],
     );
   }
 

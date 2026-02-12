@@ -96,4 +96,20 @@ class NotificationController with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> clearAllNotifications() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _apiService.clearAllNotifications();
+      _notifications.clear();
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

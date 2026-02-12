@@ -71,6 +71,37 @@ class _AlertsScreenState extends State<AlertsScreen>
     }
   }
 
+  Future<void> _clearAllNotifications() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => ConfirmationModal(
+            title: 'Clear All?',
+            content:
+                'Are you sure you want to clear all notifications? This will delete them permanently from the cloud.',
+            onConfirm: () {},
+          ),
+    );
+
+    if (confirmed == true) {
+      if (mounted) {
+        await context.read<NotificationController>().clearAllNotifications();
+
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder:
+                (context) => const StatusModal(
+                  type: StatusType.success,
+                  title: 'Cleared All',
+                  message: 'All notifications have been removed permanently.',
+                ),
+          );
+        }
+      }
+    }
+  }
+
   void _showNotificationDetails(NotificationModel notification) {
     context.read<NotificationController>().markAsRead(notification.id);
 
@@ -228,7 +259,27 @@ class _AlertsScreenState extends State<AlertsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: const CustomHeader(title: Text('Notification')),
+      appBar: CustomHeader(
+        title: const Text('Notification'),
+        actions: [
+          Consumer<NotificationController>(
+            builder: (context, controller, child) {
+              if (controller.notifications.isEmpty) return const SizedBox();
+              return TextButton.icon(
+                onPressed: _clearAllNotifications,
+                icon: const Icon(Icons.delete_sweep_rounded, color: Colors.red),
+                label: const Text(
+                  'Clear All',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: Consumer<NotificationController>(
         builder: (context, controller, child) {
           if (controller.isLoading && controller.notifications.isEmpty) {

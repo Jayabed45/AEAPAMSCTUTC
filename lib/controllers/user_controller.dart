@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/user_model.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../services/notification_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class UserController with ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -33,6 +35,12 @@ class UserController with ChangeNotifier {
     notifyListeners();
     try {
       await _authService.signIn(email, password);
+
+      // Save FCM token after successful login
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null) {
+        await NotificationService().saveTokenToDatabase(token);
+      }
     } catch (e) {
       _error = e.toString();
       _isLoading = false;

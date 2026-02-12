@@ -7,28 +7,28 @@ class ApiService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // --- System Data ---
-  Stream<SystemDataModel> getSystemDataStream() {
+  Stream<SystemDataModel?> getSystemDataStream() {
     return _firestore.collection('system').doc('current_data').snapshots().map((
       doc,
     ) {
-      if (doc.exists) {
+      if (doc.exists && doc.data() != null) {
         return SystemDataModel.fromJson(doc.data()!);
       } else {
-        throw Exception('System data document not found');
+        return null;
       }
     });
   }
 
-  Future<SystemDataModel> fetchSystemData() async {
+  Future<SystemDataModel?> fetchSystemData() async {
     try {
       // Assuming a single document for system status
       final doc =
           await _firestore.collection('system').doc('current_data').get();
 
-      if (doc.exists) {
+      if (doc.exists && doc.data() != null) {
         return SystemDataModel.fromJson(doc.data()!);
       } else {
-        throw Exception('System data document not found');
+        return null;
       }
     } catch (e) {
       throw Exception('Failed to load system data from Firebase: $e');
@@ -96,6 +96,20 @@ class ApiService {
   // Helper method to delete notification from Firebase
   Future<void> deleteNotification(String id) async {
     await _firestore.collection('notifications').doc(id).delete();
+  }
+
+  // Clear all notifications permanently from Firestore
+  Future<void> clearAllNotifications() async {
+    try {
+      final snapshot = await _firestore.collection('notifications').get();
+      final batch = _firestore.batch();
+      for (final doc in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    } catch (e) {
+      throw Exception('Failed to clear notifications: $e');
+    }
   }
 
   // --- Update System Data ---

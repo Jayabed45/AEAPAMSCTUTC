@@ -15,7 +15,6 @@ class _CombinedChartsSectionState extends State<CombinedChartsSection>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  int? _touchedIndex;
 
   @override
   void initState() {

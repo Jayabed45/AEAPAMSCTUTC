@@ -8,6 +8,7 @@ import '../widgets/combined_dashboard_card.dart';
 import '../widgets/custom_header.dart';
 import '../controllers/system_controller.dart';
 import '../services/api_service.dart';
+import '../services/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -148,32 +149,6 @@ class _HomeScreenState extends State<HomeScreen>
                         OutlinedButton(
                           onPressed: () async {
                             try {
-                              await context
-                                  .read<SystemController>()
-                                  .generateFullDayData();
-                              if (context.mounted) {
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Generated data for 6 AM - 6 PM!',
-                                    ),
-                                  ),
-                                );
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Error: $e')),
-                                );
-                              }
-                            }
-                          },
-                          child: const Text('Full Day'),
-                        ),
-                        OutlinedButton(
-                          onPressed: () async {
-                            try {
                               final warningData = SystemDataModel(
                                 voltage: 265.0,
                                 current: 8.5,
@@ -208,6 +183,23 @@ class _HomeScreenState extends State<HomeScreen>
                                 description: 'Voltage surge detected: 265.0V.',
                                 iconName: 'bolt',
                                 iconColorHex: '#F44336',
+                              );
+
+                              // Trigger local notifications for immediate feedback
+                              final notifService = NotificationService();
+                              await notifService.showManualNotification(
+                                title: 'Critical Temperature Alert',
+                                body:
+                                    'System temperature has reached 52.5°C. Immediate attention required!',
+                              );
+                              await notifService.showManualNotification(
+                                title: 'Critical Water Level',
+                                body:
+                                    'Water level is extremely low (8%). System shutdown imminent.',
+                              );
+                              await notifService.showManualNotification(
+                                title: 'Overvoltage Alert',
+                                body: 'Voltage surge detected: 265.0V.',
                               );
 
                               if (context.mounted) {
