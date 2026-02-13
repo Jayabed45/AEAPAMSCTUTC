@@ -104,16 +104,11 @@ class SystemController with ChangeNotifier {
       );
     }
 
-    // Water Level Thresholds
-    if (data.waterLevel < 10) {
+    // Daily Liters Thresholds
+    if (data.dailyLiters > 500.0) {
       _triggerSystemNotification(
-        'Critical Water Level',
-        'Water level is extremely low (${data.waterLevel}%). System shutdown imminent.',
-      );
-    } else if (data.waterLevel < 25) {
-      _triggerSystemNotification(
-        'Low Water Level',
-        'Water level is below 25%. Please refill soon.',
+        'High Water Usage',
+        'System has detected high water usage (${data.dailyLiters.toStringAsFixed(1)}L today).',
       );
     }
 

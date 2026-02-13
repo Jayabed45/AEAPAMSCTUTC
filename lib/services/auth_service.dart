@@ -43,6 +43,7 @@ class AuthService {
     try {
       // Use updateEmail for immediate change. Note: might require recent login.
       // If this fails with 'requires-recent-login', you may need to re-authenticate.
+      // ignore: deprecated_member_use
       await _auth.currentUser?.updateEmail(newEmail);
     } catch (e) {
       // Fallback to verification if updateEmail fails or is restricted

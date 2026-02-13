@@ -100,11 +100,11 @@ exports.checkSystemAnomalies = onDocumentUpdated(
             });
         }
 
-        // 2. Water Level Check (< 10%)
-        if (newData.waterLevel < 10 && (!oldData || oldData.waterLevel >= 10)) {
+        // 2. Daily Liters Check (> 500L)
+        if (newData.daily_liters > 500 && (!oldData || oldData.daily_liters <= 500)) {
             anomalies.push({
-                title: "Critical Water Level",
-                description: `Water level is extremely low (${newData.waterLevel}%).`,
+                title: "Daily Water Limit",
+                description: `Daily water usage has exceeded ${newData.daily_liters}L.`,
                 icon_name: "water_drop_rounded",
                 icon_color_hex: "#F44336",
             });

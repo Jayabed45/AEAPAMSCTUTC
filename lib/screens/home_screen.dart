@@ -75,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen>
     final currentController = TextEditingController(text: '5.0');
     final powerController = TextEditingController(text: '1100.0');
     final tempController = TextEditingController(text: '30.0');
-    final waterController = TextEditingController(text: '75');
+    final litersController = TextEditingController(text: '75');
     final energyHourController = TextEditingController(text: '1.2');
     final dailyEnergyController = TextEditingController(text: '15.5');
     final statusController = TextEditingController(text: 'Normal');
@@ -134,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen>
                     _buildTextField(currentController, 'Current (A)'),
                     _buildTextField(powerController, 'Power (W)'),
                     _buildTextField(tempController, 'Temperature (°C)'),
-                    _buildTextField(waterController, 'Water Level (%)'),
+                    _buildTextField(litersController, 'Daily Liters (L)'),
                     _buildTextField(energyHourController, 'Energy Hour (kWh)'),
                     _buildTextField(
                       dailyEnergyController,
@@ -154,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen>
                                 current: 8.5,
                                 power: 2252.5,
                                 temperature: 52.5,
-                                waterLevel: 8,
+                                dailyLiters: 550.0,
                                 energyHour: 2.5,
                                 dailyEnergy: 25.0,
                                 status: 'Warning',
@@ -172,9 +172,9 @@ class _HomeScreenState extends State<HomeScreen>
                                 iconColorHex: '#F44336',
                               );
                               await apiService.addNotification(
-                                title: 'Critical Water Level',
+                                title: 'Daily Water Limit',
                                 description:
-                                    'Water level is extremely low (8%). System shutdown imminent.',
+                                    'Daily water usage has exceeded 500L. Monitoring required.',
                                 iconName: 'water_drop_rounded',
                                 iconColorHex: '#F44336',
                               );
@@ -193,9 +193,9 @@ class _HomeScreenState extends State<HomeScreen>
                                     'System temperature has reached 52.5°C. Immediate attention required!',
                               );
                               await notifService.showManualNotification(
-                                title: 'Critical Water Level',
+                                title: 'Daily Water Limit',
                                 body:
-                                    'Water level is extremely low (8%). System shutdown imminent.',
+                                    'Daily water usage has exceeded 500L. Monitoring required.',
                               );
                               await notifService.showManualNotification(
                                 title: 'Overvoltage Alert',
@@ -235,8 +235,8 @@ class _HomeScreenState extends State<HomeScreen>
                                   double.tryParse(powerController.text) ?? 0.0,
                               temperature:
                                   double.tryParse(tempController.text) ?? 0.0,
-                              waterLevel:
-                                  int.tryParse(waterController.text) ?? 0,
+                              dailyLiters:
+                                  double.tryParse(litersController.text) ?? 0.0,
                               energyHour:
                                   double.tryParse(energyHourController.text) ??
                                   0.0,
@@ -416,7 +416,7 @@ class _HomeScreenState extends State<HomeScreen>
                           power: '${data?.power.toStringAsFixed(1) ?? 0.0} W',
                           temperature:
                               '${data?.temperature.toStringAsFixed(1) ?? 0.0}°C',
-                          waterLevel: data?.waterLevel.toDouble() ?? 0.0,
+                          dailyLiters: data?.dailyLiters ?? 0.0,
                         ),
 
                         const SizedBox(height: 24),

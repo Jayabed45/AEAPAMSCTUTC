@@ -17,8 +17,6 @@ class _SettingsScreenState extends State<SettingsScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
 
-  bool _pauseNotifications = true;
-
   @override
   void initState() {
     super.initState();

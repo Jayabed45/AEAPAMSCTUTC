@@ -7,7 +7,7 @@ class CombinedDashboardCard extends StatelessWidget {
   final String current;
   final String power;
   final String temperature;
-  final double waterLevel; // 0 to 100
+  final double dailyLiters;
   final String title;
 
   const CombinedDashboardCard({
@@ -16,7 +16,7 @@ class CombinedDashboardCard extends StatelessWidget {
     required this.current,
     required this.power,
     required this.temperature,
-    required this.waterLevel,
+    required this.dailyLiters,
     required this.title,
   });
 
@@ -169,10 +169,16 @@ class CombinedDashboardCard extends StatelessWidget {
                   Expanded(
                     flex: isSmall ? 0 : 2,
                     child: TweenAnimationBuilder<double>(
-                      tween: Tween<double>(begin: 0, end: waterLevel),
+                      tween: Tween<double>(begin: 0, end: dailyLiters),
                       duration: const Duration(seconds: 2),
                       curve: Curves.easeOutCubic,
-                      builder: (context, animatedWaterLevel, child) {
+                      builder: (context, animatedLiters, child) {
+                        // For the gauge, let's assume a target of 500L per day for visualization
+                        // You can adjust this threshold as needed
+                        const double targetLiters = 500.0;
+                        final double percentage =
+                            (animatedLiters / targetLiters * 100).clamp(0, 100);
+
                         return SizedBox(
                           height: 180,
                           child: Stack(
@@ -186,7 +192,7 @@ class CombinedDashboardCard extends StatelessWidget {
                                   sections: [
                                     PieChartSectionData(
                                       color: AppColors.primary,
-                                      value: animatedWaterLevel,
+                                      value: percentage,
                                       title: '',
                                       radius: isMobile ? 20 : 25,
                                       showTitle: false,
@@ -195,7 +201,7 @@ class CombinedDashboardCard extends StatelessWidget {
                                       color: AppColors.primary.withValues(
                                         alpha: 0.1,
                                       ),
-                                      value: 100 - animatedWaterLevel,
+                                      value: 100 - percentage,
                                       title: '',
                                       radius: isMobile ? 20 : 25,
                                       showTitle: false,
@@ -225,7 +231,7 @@ class CombinedDashboardCard extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      '${animatedWaterLevel.toInt()}%',
+                                      '${animatedLiters.toStringAsFixed(1)}L',
                                       style: TextStyle(
                                         color:
                                             Theme.of(
@@ -236,7 +242,7 @@ class CombinedDashboardCard extends StatelessWidget {
                                       ),
                                     ),
                                     Text(
-                                      'Water Level',
+                                      'Daily Liters',
                                       style: TextStyle(
                                         color: Theme.of(context)
                                             .colorScheme

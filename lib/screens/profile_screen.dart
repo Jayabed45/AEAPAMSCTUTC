@@ -80,7 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: CircleAvatar(
                                 radius: 45,
                                 backgroundColor: colorScheme.primary
-                                    .withOpacity(0.1),
+                                    .withValues(alpha: 0.1),
                                 child: Text(
                                   _getInitials(
                                     user?.fullName,
