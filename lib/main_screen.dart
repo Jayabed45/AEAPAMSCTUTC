@@ -13,12 +13,28 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
+  String _alertsLabel = 'Alerts';
+  late List<Widget> _screens;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const AlertsScreen(),
-    const SettingsScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const HomeScreen(),
+      AlertsScreen(
+        onSectionChanged: (label) {
+          if (_selectedIndex == 1) {
+            setState(() {
+              _alertsLabel = label;
+            });
+          } else {
+            _alertsLabel = label;
+          }
+        },
+      ),
+      const SettingsScreen(),
+    ];
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -43,7 +59,7 @@ class _MainScreenState extends State<MainScreen> {
           CustomNavBarItem(
             icon: Icons.notifications_outlined,
             selectedIcon: Icons.notifications,
-            label: 'Alerts',
+            label: _alertsLabel,
           ),
           CustomNavBarItem(
             icon: Icons.settings_outlined,
