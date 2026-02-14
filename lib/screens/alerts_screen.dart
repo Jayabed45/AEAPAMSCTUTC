@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -31,6 +32,7 @@ class _AlertsScreenState extends State<AlertsScreen>
   late AnimationController _animationController;
   final ApiService _apiService = ApiService();
   final List<Map<String, dynamic>> _exportedPdfs = [];
+  Timer? _dailyExportTimer;
 
   Widget _buildStatChip(
     BuildContext context,
@@ -479,6 +481,7 @@ class _AlertsScreenState extends State<AlertsScreen>
         'liters': maxLiters,
         'energy': maxEnergy,
       },
+      filePrefix: 'Sample_Report',
     );
     _recordExport(path, isSample: true);
   }
@@ -486,6 +489,7 @@ class _AlertsScreenState extends State<AlertsScreen>
   Future<String> _generateAndSaveDailyPdf(
     List<Map<String, dynamic>> todays, {
     required Map<String, double> summary,
+    String filePrefix = 'Manual_Report',
   }) async {
     final now = DateTime.now();
     final dateStr =
@@ -708,7 +712,7 @@ class _AlertsScreenState extends State<AlertsScreen>
     );
 
     final dir = await getApplicationDocumentsDirectory();
-    final filePath = '${dir.path}/Daily_Report_${dateStr}_$timeStr.pdf';
+    final filePath = '${dir.path}/${filePrefix}_${dateStr}_$timeStr.pdf';
     final file = File(filePath);
     await file.writeAsBytes(await doc.save());
     return filePath;
@@ -733,13 +737,86 @@ class _AlertsScreenState extends State<AlertsScreen>
         widget.onSectionChanged?.call(label);
       });
       _seedSamplePdfIfNone();
+      _scheduleDailyAutoExport();
     });
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _dailyExportTimer?.cancel();
     super.dispose();
+  }
+
+  void _scheduleDailyAutoExport() {
+    final now = DateTime.now();
+    final nextMidnight = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).add(const Duration(days: 1));
+    final duration = nextMidnight.difference(now);
+    _dailyExportTimer?.cancel();
+    _dailyExportTimer = Timer(duration, () async {
+      if (!mounted) return;
+      final day = DateTime(now.year, now.month, now.day);
+      await _autoExportForDay(day);
+      _scheduleDailyAutoExport();
+    });
+  }
+
+  Future<void> _autoExportForDay(DateTime day) async {
+    try {
+      final start = DateTime(day.year, day.month, day.day, 0, 0, 0);
+      final end = DateTime(day.year, day.month, day.day, 23, 59, 59, 999);
+      final qs =
+          await FirebaseFirestore.instance
+              .collection('system_history')
+              .where(
+                'timestamp',
+                isGreaterThanOrEqualTo: Timestamp.fromDate(start),
+              )
+              .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(end))
+              .orderBy('timestamp')
+              .get();
+      final entries = qs.docs.map((d) => d.data()).toList();
+      if (entries.isEmpty) return;
+      double vSum = 0, tSum = 0;
+      int count = 0;
+      double maxLiters = 0, maxEnergy = 0;
+      double vMax = 0, tMin = double.infinity, tMax = 0;
+      for (final d in entries) {
+        final v = (d['voltage'] ?? 0).toDouble();
+        final t = (d['temperature'] ?? 0).toDouble();
+        final liters = (d['dailyLiters'] ?? 0).toDouble();
+        final energy = (d['dailyEnergy'] ?? 0).toDouble();
+        vSum += v;
+        tSum += t;
+        count += 1;
+        if (liters > maxLiters) maxLiters = liters;
+        if (energy > maxEnergy) maxEnergy = energy;
+        if (v > vMax) vMax = v;
+        if (t < tMin) tMin = t;
+        if (t > tMax) tMax = t;
+      }
+      final vAvg = count == 0 ? 0.0 : (vSum / count);
+      final tAvg = count == 0 ? 0.0 : (tSum / count);
+      if (tMin == double.infinity) tMin = 0.0;
+      final path = await _generateAndSaveDailyPdf(
+        entries,
+        summary: {
+          'vAvg': vAvg,
+          'vMax': vMax,
+          'tAvg': tAvg,
+          'tMin': tMin,
+          'tMax': tMax,
+          'liters': maxLiters,
+          'energy': maxEnergy,
+        },
+        filePrefix: 'Daily_Report',
+      );
+      _recordExport(path, isSample: false);
+    } catch (_) {}
   }
 
   Future<void> _deleteNotification(String id) async {
@@ -1437,6 +1514,7 @@ class _AlertsScreenState extends State<AlertsScreen>
                                                                   maxEnergy)
                                                               .toDouble(),
                                                     },
+                                                    filePrefix: 'Manual_Report',
                                                   );
                                               _recordExport(
                                                 filePath,
@@ -1534,6 +1612,7 @@ class _AlertsScreenState extends State<AlertsScreen>
                                                       'liters': maxLiters,
                                                       'energy': maxEnergy,
                                                     },
+                                                    filePrefix: 'Sample_Report',
                                                   );
                                               _recordExport(
                                                 filePath,
