@@ -343,8 +343,19 @@ class _AlertsScreenState extends State<AlertsScreen>
     } catch (_) {
       destDir = await getApplicationDocumentsDirectory();
     }
-    final destPath = '${destDir.path}${Platform.pathSeparator}$fileName';
-    final destFile = File(destPath);
+    String destPath = '${destDir.path}${Platform.pathSeparator}$fileName';
+    File destFile = File(destPath);
+    if (await destFile.exists()) {
+      final dot = destPath.lastIndexOf('.');
+      final base = dot > 0 ? destPath.substring(0, dot) : destPath;
+      final ext = dot > 0 ? destPath.substring(dot) : '';
+      int i = 1;
+      while (await destFile.exists()) {
+        destPath = '${base} ($i)$ext';
+        destFile = File(destPath);
+        i++;
+      }
+    }
     await srcFile.copy(destPath);
     return destFile.path;
   }
@@ -479,6 +490,8 @@ class _AlertsScreenState extends State<AlertsScreen>
     final now = DateTime.now();
     final dateStr =
         '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final timeStr =
+        '${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}';
 
     final doc = pw.Document();
 
@@ -695,7 +708,7 @@ class _AlertsScreenState extends State<AlertsScreen>
     );
 
     final dir = await getApplicationDocumentsDirectory();
-    final filePath = '${dir.path}/Daily_Report_$dateStr.pdf';
+    final filePath = '${dir.path}/Daily_Report_${dateStr}_$timeStr.pdf';
     final file = File(filePath);
     await file.writeAsBytes(await doc.save());
     return filePath;
@@ -1248,10 +1261,51 @@ class _AlertsScreenState extends State<AlertsScreen>
                                         return false;
                                       }).toList();
 
-                                  final exportEntries =
-                                      todays.isEmpty
-                                          ? _buildSampleEntries(now)
-                                          : todays;
+                                  final live =
+                                      context
+                                          .read<SystemController>()
+                                          .systemData;
+                                  Map<String, dynamic>? liveEntry;
+                                  if (live != null) {
+                                    liveEntry = {
+                                      'timestamp': Timestamp.fromDate(
+                                        DateTime.now(),
+                                      ),
+                                      'voltage': live.voltage,
+                                      'current': live.current,
+                                      'power': live.power,
+                                      'temperature': live.temperature,
+                                      'dailyLiters': live.dailyLiters,
+                                      'energyHour': live.energyHour,
+                                      'dailyEnergy': live.dailyEnergy,
+                                      'status': live.status,
+                                    };
+                                  }
+                                  List<Map<String, dynamic>> exportEntries =
+                                      List.from(todays);
+                                  if (liveEntry != null) {
+                                    exportEntries.add(liveEntry);
+                                  }
+                                  if (exportEntries.isEmpty) {
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Daily Report',
+                                          style: theme.textTheme.titleSmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        const Text(
+                                          'No live or historical data available to export.',
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                      ],
+                                    );
+                                  }
                                   double vSum = 0, tSum = 0;
                                   int count = 0;
                                   double maxLiters = 0, maxEnergy = 0;
@@ -1363,15 +1417,25 @@ class _AlertsScreenState extends State<AlertsScreen>
                                                   await _generateAndSaveDailyPdf(
                                                     exportEntries,
                                                     summary: {
-                                                      'vAvg': vAvg.toDouble(),
+                                                      'vAvg':
+                                                          (live?.voltage ??
+                                                                  vAvg)
+                                                              .toDouble(),
                                                       'vMax': vMax.toDouble(),
-                                                      'tAvg': tAvg.toDouble(),
+                                                      'tAvg':
+                                                          (live?.temperature ??
+                                                                  tAvg)
+                                                              .toDouble(),
                                                       'tMin': tMin.toDouble(),
                                                       'tMax': tMax.toDouble(),
                                                       'liters':
-                                                          maxLiters.toDouble(),
+                                                          (live?.dailyLiters ??
+                                                                  maxLiters)
+                                                              .toDouble(),
                                                       'energy':
-                                                          maxEnergy.toDouble(),
+                                                          (live?.dailyEnergy ??
+                                                                  maxEnergy)
+                                                              .toDouble(),
                                                     },
                                                   );
                                               _recordExport(
