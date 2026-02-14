@@ -16,6 +16,7 @@ import '../constants/app_colors.dart';
 import '../controllers/notification_controller.dart';
 import '../models/notification_model.dart';
 import '../services/api_service.dart';
+import '../controllers/system_controller.dart';
 
 class AlertsScreen extends StatefulWidget {
   final ValueChanged<String>? onSectionChanged;
@@ -351,13 +352,25 @@ class _AlertsScreenState extends State<AlertsScreen>
   Future<void> _downloadAndNotify(BuildContext context, String srcPath) async {
     try {
       final savedPath = await _downloadPdfToUserDownloads(srcPath);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Saved to: $savedPath')));
+      showDialog(
+        context: context,
+        builder:
+            (context) => StatusModal(
+              type: StatusType.success,
+              title: 'Download Complete',
+              message: savedPath,
+            ),
+      );
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to download: $e')));
+      showDialog(
+        context: context,
+        builder:
+            (context) => StatusModal(
+              type: StatusType.error,
+              title: 'Download Failed',
+              message: '$e',
+            ),
+      );
     }
   }
 
@@ -479,6 +492,14 @@ class _AlertsScreenState extends State<AlertsScreen>
     );
     final bodyStyle = pw.TextStyle(fontSize: 11);
 
+    pw.MemoryImage? logoImage;
+    try {
+      final bytes = await rootBundle.load('assets/images/ic_launcher.png');
+      logoImage = pw.MemoryImage(bytes.buffer.asUint8List());
+    } catch (_) {
+      logoImage = null;
+    }
+
     pw.Widget buildSummaryRow(String label, String value) {
       return pw.Container(
         padding: const pw.EdgeInsets.all(8),
@@ -536,10 +557,34 @@ class _AlertsScreenState extends State<AlertsScreen>
         build:
             (context) => [
               pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: pw.CrossAxisAlignment.center,
                 children: [
-                  pw.Text('Daily Report', style: headerStyle),
-                  pw.Text(dateStr, style: bodyStyle),
+                  if (logoImage != null)
+                    pw.Container(
+                      width: 36,
+                      height: 36,
+                      margin: const pw.EdgeInsets.only(right: 12),
+                      child: pw.Image(logoImage),
+                    ),
+                  pw.Expanded(
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          'PHOTOVOLTAIC ARRAY MONITORING SYSTEM',
+                          style: headerStyle,
+                        ),
+                        pw.SizedBox(height: 4),
+                        pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          children: [
+                            pw.Text('Daily Report', style: bodyStyle),
+                            pw.Text(dateStr, style: bodyStyle),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
               pw.SizedBox(height: 16),
@@ -1181,12 +1226,8 @@ class _AlertsScreenState extends State<AlertsScreen>
                                                 ),
                                               );
                                             },
-                                            icon: const Icon(
-                                              Icons.file_download,
-                                            ),
-                                            label: const Text(
-                                              'Download Report',
-                                            ),
+                                            icon: const Icon(Icons.upload_file),
+                                            label: const Text('Export Report'),
                                           ),
                                         ),
                                       ],
@@ -1259,8 +1300,8 @@ class _AlertsScreenState extends State<AlertsScreen>
                                           Expanded(
                                             child: _buildStatChip(
                                               context,
-                                              'Voltage Avg',
-                                              '${vAvg.toStringAsFixed(1)} V',
+                                              'Voltage',
+                                              '${(context.watch<SystemController>().systemData?.voltage ?? 0).toStringAsFixed(1)} V',
                                               theme.colorScheme.primary,
                                             ),
                                           ),
@@ -1269,7 +1310,7 @@ class _AlertsScreenState extends State<AlertsScreen>
                                             child: _buildStatChip(
                                               context,
                                               'Water Usage',
-                                              '${maxLiters.toStringAsFixed(0)} L',
+                                              '${(context.watch<SystemController>().systemData?.dailyLiters ?? 0).toStringAsFixed(0)} L',
                                               theme.colorScheme.secondary,
                                             ),
                                           ),
@@ -1282,7 +1323,7 @@ class _AlertsScreenState extends State<AlertsScreen>
                                             child: _buildStatChip(
                                               context,
                                               'Energy Daily',
-                                              '${maxEnergy.toStringAsFixed(1)} kWh',
+                                              '${(context.watch<SystemController>().systemData?.dailyEnergy ?? 0).toStringAsFixed(1)} kWh',
                                               theme.colorScheme.tertiary,
                                             ),
                                           ),
@@ -1290,8 +1331,8 @@ class _AlertsScreenState extends State<AlertsScreen>
                                           Expanded(
                                             child: _buildStatChip(
                                               context,
-                                              'Temp Avg',
-                                              '${tAvg.toStringAsFixed(1)} °C',
+                                              'Temperature',
+                                              '${(context.watch<SystemController>().systemData?.temperature ?? 0).toStringAsFixed(1)} °C',
                                               theme.colorScheme.onSurface,
                                             ),
                                           ),
@@ -1303,14 +1344,17 @@ class _AlertsScreenState extends State<AlertsScreen>
                                         child: OutlinedButton.icon(
                                           onPressed: () async {
                                             if (exportEntries.isEmpty) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                const SnackBar(
-                                                  content: Text(
-                                                    'No data for today to export',
-                                                  ),
-                                                ),
+                                              showDialog(
+                                                context: context,
+                                                builder:
+                                                    (
+                                                      context,
+                                                    ) => const StatusModal(
+                                                      type: StatusType.error,
+                                                      title: 'No Data',
+                                                      message:
+                                                          'No data for today to export',
+                                                    ),
                                               );
                                               return;
                                             }
@@ -1334,31 +1378,34 @@ class _AlertsScreenState extends State<AlertsScreen>
                                                 filePath,
                                                 isSample: todays.isEmpty,
                                               );
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    todays.isEmpty
-                                                        ? 'Sample report saved: $filePath'
-                                                        : 'Report saved: $filePath',
-                                                  ),
-                                                ),
+                                              showDialog(
+                                                context: context,
+                                                builder:
+                                                    (context) => StatusModal(
+                                                      type: StatusType.success,
+                                                      title:
+                                                          todays.isEmpty
+                                                              ? 'Sample Report Exported'
+                                                              : 'Report Exported',
+                                                      message:
+                                                          'Export completed successfully',
+                                                    ),
                                               );
                                             } catch (e) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    'Failed to generate PDF: $e',
-                                                  ),
-                                                ),
+                                              showDialog(
+                                                context: context,
+                                                builder:
+                                                    (context) => StatusModal(
+                                                      type: StatusType.error,
+                                                      title:
+                                                          'Failed to Generate PDF',
+                                                      message: '$e',
+                                                    ),
                                               );
                                             }
                                           },
-                                          icon: const Icon(Icons.file_download),
-                                          label: const Text('Download Report'),
+                                          icon: const Icon(Icons.upload_file),
+                                          label: const Text('Export Report'),
                                         ),
                                       ),
                                       const SizedBox(height: 8),
@@ -1428,24 +1475,29 @@ class _AlertsScreenState extends State<AlertsScreen>
                                                 filePath,
                                                 isSample: true,
                                               );
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    'Sample report saved: $filePath',
-                                                  ),
-                                                ),
+                                              showDialog(
+                                                context: context,
+                                                builder:
+                                                    (
+                                                      context,
+                                                    ) => const StatusModal(
+                                                      type: StatusType.success,
+                                                      title:
+                                                          'Sample Report Exported',
+                                                      message:
+                                                          'Export completed successfully',
+                                                    ),
                                               );
                                             } catch (e) {
-                                              ScaffoldMessenger.of(
-                                                context,
-                                              ).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    'Failed to generate sample PDF: $e',
-                                                  ),
-                                                ),
+                                              showDialog(
+                                                context: context,
+                                                builder:
+                                                    (context) => StatusModal(
+                                                      type: StatusType.error,
+                                                      title:
+                                                          'Failed to Generate Sample PDF',
+                                                      message: '$e',
+                                                    ),
                                               );
                                             }
                                           },
