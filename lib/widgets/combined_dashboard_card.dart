@@ -290,33 +290,50 @@ class CombinedDashboardCard extends StatelessWidget {
               const SizedBox(height: 24),
 
               // Bottom Stats
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildBottomStat(
-                    context,
-                    'System Status',
-                    'Normal',
-                    Colors.green,
-                    isMobile,
-                  ),
-                  _buildMetricDivider(context),
-                  _buildBottomStat(
-                    context,
-                    'Active Alerts',
-                    '0',
-                    Theme.of(context).colorScheme.onSurface,
-                    isMobile,
-                  ),
-                  _buildMetricDivider(context),
-                  _buildBottomStat(
-                    context,
-                    'Uptime',
-                    '24h 12m',
-                    Theme.of(context).colorScheme.onSurface,
-                    isMobile,
-                  ),
-                ],
+              Builder(
+                builder: (context) {
+                  final double v = _extractNumber(voltage);
+                  final double c = _extractNumber(current);
+                  final double p = _extractNumber(power);
+                  final double t = _extractNumber(temperature);
+                  int redCount = 0;
+                  if (v > 250.0) redCount++;
+                  if (c >= 5.0) redCount++;
+                  if (p >= 300.0) redCount++;
+                  if (t > 50.0) redCount++;
+                  final String statusText =
+                      redCount == 0
+                          ? 'Normal'
+                          : (redCount == 1 ? 'Moderate Normal' : 'Not Normal');
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildBottomStat(
+                        context,
+                        'System Status',
+                        statusText,
+                        Colors.green,
+                        isMobile,
+                      ),
+                      _buildMetricDivider(context),
+                      _buildBottomStat(
+                        context,
+                        'Active Alerts',
+                        '0',
+                        Theme.of(context).colorScheme.onSurface,
+                        isMobile,
+                      ),
+                      _buildMetricDivider(context),
+                      _buildBottomStat(
+                        context,
+                        'Uptime',
+                        '24h 12m',
+                        Theme.of(context).colorScheme.onSurface,
+                        isMobile,
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ),
