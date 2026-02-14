@@ -118,48 +118,70 @@ class CombinedDashboardCard extends StatelessWidget {
                     flex: isSmall ? 0 : 3,
                     child: Column(
                       children: [
-                        Row(
-                          children: [
-                            _buildMetricItem(
-                              context,
-                              'Voltage',
-                              voltage,
-                              Theme.of(context).colorScheme.onSurface,
-                              Icons.bolt,
-                              isMobile,
-                            ),
-                            SizedBox(width: isMobile ? 16 : 24),
-                            _buildMetricItem(
-                              context,
-                              'Current',
-                              current,
-                              Theme.of(context).colorScheme.onSurface,
-                              Icons.electrical_services,
-                              isMobile,
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: isMobile ? 24 : 32),
-                        Row(
-                          children: [
-                            _buildMetricItem(
-                              context,
-                              'Power',
-                              power,
-                              Theme.of(context).colorScheme.onSurface,
-                              Icons.power,
-                              isMobile,
-                            ),
-                            SizedBox(width: isMobile ? 16 : 24),
-                            _buildMetricItem(
-                              context,
-                              'Temperature',
-                              temperature,
-                              Theme.of(context).colorScheme.onSurface,
-                              Icons.thermostat,
-                              isMobile,
-                            ),
-                          ],
+                        Builder(
+                          builder: (context) {
+                            final double v = _extractNumber(voltage);
+                            final double c = _extractNumber(current);
+                            final double p = _extractNumber(power);
+                            final double t = _extractNumber(temperature);
+                            final Color defaultColor =
+                                Theme.of(context).colorScheme.onSurface;
+                            final Color voltageColor =
+                                v > 250.0 ? Colors.red : defaultColor;
+                            final Color currentColor =
+                                c >= 5.0 ? Colors.red : defaultColor;
+                            final Color powerColor =
+                                p >= 300.0 ? Colors.red : defaultColor;
+                            final Color temperatureColor =
+                                t > 50.0 ? Colors.red : defaultColor;
+                            return Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    _buildMetricItem(
+                                      context,
+                                      'Voltage',
+                                      voltage,
+                                      voltageColor,
+                                      Icons.bolt,
+                                      isMobile,
+                                    ),
+                                    SizedBox(width: isMobile ? 16 : 24),
+                                    _buildMetricItem(
+                                      context,
+                                      'Current',
+                                      current,
+                                      currentColor,
+                                      Icons.electrical_services,
+                                      isMobile,
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: isMobile ? 24 : 32),
+                                Row(
+                                  children: [
+                                    _buildMetricItem(
+                                      context,
+                                      'Power',
+                                      power,
+                                      powerColor,
+                                      Icons.power,
+                                      isMobile,
+                                    ),
+                                    SizedBox(width: isMobile ? 16 : 24),
+                                    _buildMetricItem(
+                                      context,
+                                      'Temperature',
+                                      temperature,
+                                      temperatureColor,
+                                      Icons.thermostat,
+                                      isMobile,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ],
                     ),
