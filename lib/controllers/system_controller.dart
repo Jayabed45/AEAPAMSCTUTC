@@ -25,11 +25,25 @@ class SystemController with ChangeNotifier {
     _initStream();
   }
 
+  SystemDataModel _sanitize(SystemDataModel d) {
+    return SystemDataModel(
+      voltage: d.voltage.clamp(0.0, 260.0).toDouble(),
+      current: d.current.clamp(0.0, 30.0).toDouble(),
+      power: d.power.clamp(0.0, 8000.0).toDouble(),
+      temperature: d.temperature.clamp(-40.0, 125.0).toDouble(),
+      dailyLiters: d.dailyLiters.clamp(0.0, 10000.0).toDouble(),
+      energyHour: d.energyHour.clamp(0.0, 100.0).toDouble(),
+      dailyEnergy: d.dailyEnergy.clamp(0.0, 1000.0).toDouble(),
+      status: d.status,
+    );
+  }
+
   void _initStream() {
     _isLoading = true;
     _subscription = _apiService.getSystemDataStream().listen(
       (data) {
         if (data != null) {
+          data = _sanitize(data);
           // Check for anomalies before updating state
           _checkSystemAnomalies(data);
         }
@@ -65,7 +79,8 @@ class SystemController with ChangeNotifier {
     notifyListeners();
 
     try {
-      _systemData = await _apiService.fetchSystemData();
+      final d = await _apiService.fetchSystemData();
+      _systemData = d == null ? null : _sanitize(d);
     } catch (e) {
       _error = e.toString();
     } finally {

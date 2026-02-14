@@ -3,6 +3,7 @@
 #include <WiFiManager.h>
 #include <Firebase_ESP_Client.h>
 #include <time.h>
+#include <driver/rtc_io.h>
 
 // Provide the token generation process info.
 #include <addons/TokenHelper.h>
@@ -32,6 +33,79 @@ float flowRate = 0.0;
 float totalLiters = 0.0;
 unsigned long oldTime = 0;
 
+const int DS18B20_PIN = 4;
+unsigned long lastTempMillis = 0;
+double lastTemperature = 25.0;
+
+void owWriteBit(bool v) {
+  rtc_gpio_hold_dis((gpio_num_t)DS18B20_PIN);
+  pinMode(DS18B20_PIN, OUTPUT);
+  digitalWrite(DS18B20_PIN, LOW);
+  if (v) {
+    delayMicroseconds(10);
+    pinMode(DS18B20_PIN, INPUT);
+    delayMicroseconds(55);
+  } else {
+    delayMicroseconds(65);
+    pinMode(DS18B20_PIN, INPUT);
+    delayMicroseconds(5);
+  }
+}
+
+bool owReadBit() {
+  rtc_gpio_hold_dis((gpio_num_t)DS18B20_PIN);
+  pinMode(DS18B20_PIN, OUTPUT);
+  digitalWrite(DS18B20_PIN, LOW);
+  delayMicroseconds(3);
+  pinMode(DS18B20_PIN, INPUT);
+  delayMicroseconds(10);
+  bool r = digitalRead(DS18B20_PIN);
+  delayMicroseconds(50);
+  return r;
+}
+
+void owWriteByte(uint8_t b) {
+  for (int i = 0; i < 8; i++) {
+    owWriteBit((b >> i) & 0x01);
+  }
+}
+
+uint8_t owReadByte() {
+  uint8_t r = 0;
+  for (int i = 0; i < 8; i++) {
+    if (owReadBit()) r |= (1 << i);
+  }
+  return r;
+}
+
+bool owReset() {
+  rtc_gpio_hold_dis((gpio_num_t)DS18B20_PIN);
+  pinMode(DS18B20_PIN, OUTPUT);
+  digitalWrite(DS18B20_PIN, LOW);
+  delayMicroseconds(480);
+  pinMode(DS18B20_PIN, INPUT);
+  delayMicroseconds(70);
+  bool presence = (digitalRead(DS18B20_PIN) == LOW);
+  delayMicroseconds(410);
+  return presence;
+}
+
+double readDS18B20() {
+  if (!owReset()) return lastTemperature;
+  owWriteByte(0xCC);
+  owWriteByte(0x44);
+  delay(750);
+  if (!owReset()) return lastTemperature;
+  owWriteByte(0xCC);
+  owWriteByte(0xBE);
+  uint8_t d0 = owReadByte();
+  uint8_t d1 = owReadByte();
+  int16_t raw = (int16_t)((d1 << 8) | d0);
+  double t = raw / 16.0;
+  lastTemperature = t;
+  return t;
+}
+
 void IRAM_ATTR pulseCounter() {
   pulseCount++;
 }
@@ -47,6 +121,7 @@ void setup() {
   // Initialize Flow Sensor
   pinMode(FLOW_SENSOR_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(FLOW_SENSOR_PIN), pulseCounter, FALLING);
+  pinMode(DS18B20_PIN, INPUT);
 
   // WiFiManager
   // Local intialization. Once its business is done, there is no need to keep it around
@@ -120,6 +195,10 @@ void loop() {
     
     pulseCount = 0;
     attachInterrupt(digitalPinToInterrupt(FLOW_SENSOR_PIN), pulseCounter, FALLING);
+    if (millis() - lastTempMillis > 1000) {
+      lastTemperature = readDS18B20();
+      lastTempMillis = millis();
+    }
   }
 
   // Send data every 10 seconds
@@ -134,7 +213,7 @@ void loop() {
     double voltage = 220.0 + random(-5, 5);
     double current = 1.5 + (random(0, 100) / 100.0);
     double power = voltage * current;
-    double temperature = 25.0 + (random(0, 50) / 10.0);
+    double temperature = lastTemperature;
     double energy_hour = 0.5;
     double daily_energy = 12.4;
     String status = "Normal";
