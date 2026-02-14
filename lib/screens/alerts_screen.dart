@@ -9,6 +9,9 @@ import 'package:pdf/pdf.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../firebase_options.dart';
 import '../widgets/notification_item.dart';
 import '../widgets/custom_header.dart';
 import '../widgets/confirmation_modal.dart';
@@ -214,10 +217,11 @@ class _AlertsScreenState extends State<AlertsScreen>
     BuildContext context, {
     required String path,
     required DateTime time,
-    required bool isSample,
   }) {
     final theme = Theme.of(context);
     final fileName = path.split(Platform.pathSeparator).last;
+    final dateStr =
+        '${time.year.toString().padLeft(4, '0')}-${time.month.toString().padLeft(2, '0')}-${time.day.toString().padLeft(2, '0')}';
     final timeStr =
         '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
     return InkWell(
@@ -263,33 +267,11 @@ class _AlertsScreenState extends State<AlertsScreen>
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (isSample)
-                        Container(
-                          margin: const EdgeInsets.only(left: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.secondary.withValues(
-                              alpha: 0.15,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'Sample',
-                            style: TextStyle(
-                              color: theme.colorScheme.secondary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    timeStr,
+                    '$dateStr $timeStr',
                     style: TextStyle(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       fontSize: 12,
@@ -313,12 +295,8 @@ class _AlertsScreenState extends State<AlertsScreen>
     );
   }
 
-  void _recordExport(String path, {bool isSample = false}) {
-    _exportedPdfs.insert(0, {
-      'path': path,
-      'time': DateTime.now(),
-      'sample': isSample,
-    });
+  void _recordExport(String path) {
+    _exportedPdfs.insert(0, {'path': path, 'time': DateTime.now()});
     setState(() {});
   }
 
@@ -387,103 +365,49 @@ class _AlertsScreenState extends State<AlertsScreen>
     }
   }
 
-  List<Map<String, dynamic>> _buildSampleEntries(DateTime now) {
-    final baseDate = DateTime(now.year, now.month, now.day);
-    final times = [
-      DateTime(baseDate.year, baseDate.month, baseDate.day, 8, 0),
-      DateTime(baseDate.year, baseDate.month, baseDate.day, 12, 0),
-      DateTime(baseDate.year, baseDate.month, baseDate.day, 16, 0),
-      DateTime(baseDate.year, baseDate.month, baseDate.day, 20, 0),
-    ];
-    final samples = [
-      {
-        'voltage': 220.0,
-        'current': 3.2,
-        'power': 704.0,
-        'temperature': 28.0,
-        'dailyLiters': 120.0,
-        'energyHour': 1.2,
-        'dailyEnergy': 1.2,
-        'status': 'online',
-      },
-      {
-        'voltage': 221.5,
-        'current': 3.6,
-        'power': 798.0,
-        'temperature': 31.0,
-        'dailyLiters': 200.0,
-        'energyHour': 2.6,
-        'dailyEnergy': 3.8,
-        'status': 'online',
-      },
-      {
-        'voltage': 219.0,
-        'current': 4.1,
-        'power': 898.0,
-        'temperature': 29.5,
-        'dailyLiters': 150.0,
-        'energyHour': 2.7,
-        'dailyEnergy': 6.5,
-        'status': 'online',
-      },
-      {
-        'voltage': 222.0,
-        'current': 3.0,
-        'power': 666.0,
-        'temperature': 27.0,
-        'dailyLiters': 30.0,
-        'energyHour': 1.0,
-        'dailyEnergy': 7.5,
-        'status': 'online',
-      },
-    ];
-    return List.generate(times.length, (i) {
-      return {...samples[i], 'timestamp': Timestamp.fromDate(times[i])};
-    });
-  }
-
-  Future<void> _seedSamplePdfIfNone() async {
-    if (_exportedPdfs.isNotEmpty) return;
-    final now = DateTime.now();
-    final entries = _buildSampleEntries(now);
-    double vSum = 0, tSum = 0;
-    int count = 0;
-    double maxLiters = 0,
-        maxEnergy = 0,
-        vMax = 0,
-        tMin = double.infinity,
-        tMax = 0;
-    for (final d in entries) {
-      final v = (d['voltage'] ?? 0).toDouble();
-      final t = (d['temperature'] ?? 0).toDouble();
-      final liters = (d['dailyLiters'] ?? 0).toDouble();
-      final energy = (d['dailyEnergy'] ?? 0).toDouble();
-      vSum += v;
-      tSum += t;
-      count += 1;
-      if (liters > maxLiters) maxLiters = liters;
-      if (energy > maxEnergy) maxEnergy = energy;
-      if (v > vMax) vMax = v;
-      if (t < tMin) tMin = t;
-      if (t > tMax) tMax = t;
+  Future<void> _uploadPdfToFirebase(
+    String path, {
+    required Map<String, double> summary,
+    required String type,
+  }) async {
+    final file = File(path);
+    if (!await file.exists()) {
+      throw Exception('PDF file not found');
     }
-    final vAvg = count == 0 ? 0.0 : (vSum / count);
-    final tAvg = count == 0 ? 0.0 : (tSum / count);
-    if (tMin == double.infinity) tMin = 0.0;
-    final path = await _generateAndSaveDailyPdf(
-      entries,
-      summary: {
-        'vAvg': vAvg,
-        'vMax': vMax,
-        'tAvg': tAvg,
-        'tMin': tMin,
-        'tMax': tMax,
-        'liters': maxLiters,
-        'energy': maxEnergy,
-      },
-      filePrefix: 'Sample_Report',
+    final now = DateTime.now();
+    final fileName = path.split(Platform.pathSeparator).last;
+    final month = now.month.toString().padLeft(2, '0');
+    final storagePath = 'reports/${now.year}-$month/$fileName';
+    final storage = FirebaseStorage.instanceFor(
+      bucket: DefaultFirebaseOptions.currentPlatform.storageBucket,
     );
-    _recordExport(path, isSample: true);
+    final ref = storage.ref().child(storagePath);
+    final snapshot = await ref.putFile(
+      file,
+      SettableMetadata(contentType: 'application/pdf'),
+    );
+    if (snapshot.state != TaskState.success) {
+      throw Exception('Upload failed');
+    }
+    final url = await ref.getDownloadURL();
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    await FirebaseFirestore.instance.collection('reports').add({
+      'fileName': fileName,
+      'url': url,
+      'storagePath': storagePath,
+      'createdAt': Timestamp.fromDate(now),
+      'type': type,
+      'summary': {
+        'vAvg': summary['vAvg'] ?? 0,
+        'vMax': summary['vMax'] ?? 0,
+        'tAvg': summary['tAvg'] ?? 0,
+        'tMin': summary['tMin'] ?? 0,
+        'tMax': summary['tMax'] ?? 0,
+        'liters': summary['liters'] ?? 0,
+        'energy': summary['energy'] ?? 0,
+      },
+      'userId': uid,
+    });
   }
 
   Future<String> _generateAndSaveDailyPdf(
@@ -595,7 +519,7 @@ class _AlertsScreenState extends State<AlertsScreen>
                         pw.Row(
                           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                           children: [
-                            pw.Text('Daily Report', style: bodyStyle),
+                            pw.Text('Report', style: bodyStyle),
                             pw.Text(dateStr, style: bodyStyle),
                           ],
                         ),
@@ -736,7 +660,6 @@ class _AlertsScreenState extends State<AlertsScreen>
         final label = index == 0 ? 'Notifications' : 'Report';
         widget.onSectionChanged?.call(label);
       });
-      _seedSamplePdfIfNone();
       _scheduleDailyAutoExport();
     });
   }
@@ -802,20 +725,22 @@ class _AlertsScreenState extends State<AlertsScreen>
       final vAvg = count == 0 ? 0.0 : (vSum / count);
       final tAvg = count == 0 ? 0.0 : (tSum / count);
       if (tMin == double.infinity) tMin = 0.0;
+      final summary = {
+        'vAvg': vAvg,
+        'vMax': vMax,
+        'tAvg': tAvg,
+        'tMin': tMin,
+        'tMax': tMax,
+        'liters': maxLiters,
+        'energy': maxEnergy,
+      };
       final path = await _generateAndSaveDailyPdf(
         entries,
-        summary: {
-          'vAvg': vAvg,
-          'vMax': vMax,
-          'tAvg': tAvg,
-          'tMin': tMin,
-          'tMax': tMax,
-          'liters': maxLiters,
-          'energy': maxEnergy,
-        },
+        summary: summary,
         filePrefix: 'Daily_Report',
       );
-      _recordExport(path, isSample: false);
+      _recordExport(path);
+      await _uploadPdfToFirebase(path, summary: summary, type: 'auto');
     } catch (_) {}
   }
 
@@ -1250,7 +1175,7 @@ class _AlertsScreenState extends State<AlertsScreen>
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Daily Report',
+                                          'Report',
                                           style: theme.textTheme.titleSmall
                                               ?.copyWith(
                                                 fontWeight: FontWeight.w600,
@@ -1369,7 +1294,7 @@ class _AlertsScreenState extends State<AlertsScreen>
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Daily Report',
+                                          'Report',
                                           style: theme.textTheme.titleSmall
                                               ?.copyWith(
                                                 fontWeight: FontWeight.w600,
@@ -1419,7 +1344,7 @@ class _AlertsScreenState extends State<AlertsScreen>
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Daily Report',
+                                        'Report',
                                         style: theme.textTheme.titleSmall
                                             ?.copyWith(
                                               fontWeight: FontWeight.w600,
@@ -1490,36 +1415,50 @@ class _AlertsScreenState extends State<AlertsScreen>
                                               return;
                                             }
                                             try {
+                                              final summary = {
+                                                'vAvg':
+                                                    (live?.voltage ?? vAvg)
+                                                        .toDouble(),
+                                                'vMax': vMax.toDouble(),
+                                                'tAvg':
+                                                    (live?.temperature ?? tAvg)
+                                                        .toDouble(),
+                                                'tMin': tMin.toDouble(),
+                                                'tMax': tMax.toDouble(),
+                                                'liters':
+                                                    (live?.dailyLiters ??
+                                                            maxLiters)
+                                                        .toDouble(),
+                                                'energy':
+                                                    (live?.dailyEnergy ??
+                                                            maxEnergy)
+                                                        .toDouble(),
+                                              };
                                               final filePath =
                                                   await _generateAndSaveDailyPdf(
                                                     exportEntries,
-                                                    summary: {
-                                                      'vAvg':
-                                                          (live?.voltage ??
-                                                                  vAvg)
-                                                              .toDouble(),
-                                                      'vMax': vMax.toDouble(),
-                                                      'tAvg':
-                                                          (live?.temperature ??
-                                                                  tAvg)
-                                                              .toDouble(),
-                                                      'tMin': tMin.toDouble(),
-                                                      'tMax': tMax.toDouble(),
-                                                      'liters':
-                                                          (live?.dailyLiters ??
-                                                                  maxLiters)
-                                                              .toDouble(),
-                                                      'energy':
-                                                          (live?.dailyEnergy ??
-                                                                  maxEnergy)
-                                                              .toDouble(),
-                                                    },
+                                                    summary: summary,
                                                     filePrefix: 'Manual_Report',
                                                   );
-                                              _recordExport(
-                                                filePath,
-                                                isSample: todays.isEmpty,
-                                              );
+                                              _recordExport(filePath);
+                                              try {
+                                                await _uploadPdfToFirebase(
+                                                  filePath,
+                                                  summary: summary,
+                                                  type: 'manual',
+                                                );
+                                              } catch (e) {
+                                                showDialog(
+                                                  context: context,
+                                                  builder:
+                                                      (context) => StatusModal(
+                                                        type: StatusType.error,
+                                                        title: 'Upload Failed',
+                                                        message: '$e',
+                                                      ),
+                                                );
+                                                return;
+                                              }
                                               showDialog(
                                                 context: context,
                                                 builder:
@@ -1551,106 +1490,7 @@ class _AlertsScreenState extends State<AlertsScreen>
                                         ),
                                       ),
                                       const SizedBox(height: 8),
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: OutlinedButton.icon(
-                                          onPressed: () async {
-                                            try {
-                                              final now = DateTime.now();
-                                              final entries =
-                                                  _buildSampleEntries(now);
-                                              double vSum = 0, tSum = 0;
-                                              int count = 0;
-                                              double maxLiters = 0,
-                                                  maxEnergy = 0,
-                                                  vMax = 0,
-                                                  tMin = double.infinity,
-                                                  tMax = 0;
-                                              for (final d in entries) {
-                                                final v =
-                                                    (d['voltage'] ?? 0)
-                                                        .toDouble();
-                                                final t =
-                                                    (d['temperature'] ?? 0)
-                                                        .toDouble();
-                                                final liters =
-                                                    (d['dailyLiters'] ?? 0)
-                                                        .toDouble();
-                                                final energy =
-                                                    (d['dailyEnergy'] ?? 0)
-                                                        .toDouble();
-                                                vSum += v;
-                                                tSum += t;
-                                                count += 1;
-                                                if (liters > maxLiters)
-                                                  maxLiters = liters;
-                                                if (energy > maxEnergy)
-                                                  maxEnergy = energy;
-                                                if (v > vMax) vMax = v;
-                                                if (t < tMin) tMin = t;
-                                                if (t > tMax) tMax = t;
-                                              }
-                                              final vAvg =
-                                                  count == 0
-                                                      ? 0.0
-                                                      : (vSum / count);
-                                              final tAvg =
-                                                  count == 0
-                                                      ? 0.0
-                                                      : (tSum / count);
-                                              if (tMin == double.infinity)
-                                                tMin = 0.0;
-                                              final filePath =
-                                                  await _generateAndSaveDailyPdf(
-                                                    entries,
-                                                    summary: {
-                                                      'vAvg': vAvg,
-                                                      'vMax': vMax,
-                                                      'tAvg': tAvg,
-                                                      'tMin': tMin,
-                                                      'tMax': tMax,
-                                                      'liters': maxLiters,
-                                                      'energy': maxEnergy,
-                                                    },
-                                                    filePrefix: 'Sample_Report',
-                                                  );
-                                              _recordExport(
-                                                filePath,
-                                                isSample: true,
-                                              );
-                                              showDialog(
-                                                context: context,
-                                                builder:
-                                                    (
-                                                      context,
-                                                    ) => const StatusModal(
-                                                      type: StatusType.success,
-                                                      title:
-                                                          'Sample Report Exported',
-                                                      message:
-                                                          'Export completed successfully',
-                                                    ),
-                                              );
-                                            } catch (e) {
-                                              showDialog(
-                                                context: context,
-                                                builder:
-                                                    (context) => StatusModal(
-                                                      type: StatusType.error,
-                                                      title:
-                                                          'Failed to Generate Sample PDF',
-                                                      message: '$e',
-                                                    ),
-                                              );
-                                            }
-                                          },
-                                          icon: const Icon(Icons.description),
-                                          label: const Text(
-                                            'Generate Sample Report',
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
+                                      const SizedBox.shrink(),
                                     ],
                                   );
                                 },
@@ -1678,7 +1518,6 @@ class _AlertsScreenState extends State<AlertsScreen>
                                   context,
                                   path: e['path'] as String,
                                   time: e['time'] as DateTime,
-                                  isSample: (e['sample'] as bool?) ?? false,
                                 ),
                               ),
                           ],
