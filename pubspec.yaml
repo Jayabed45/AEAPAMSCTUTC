@@ -50,6 +50,9 @@ dependencies:
   pdf: ^3.11.0
   open_filex: ^4.1.0
   firebase_storage: ^12.3.4
+  sqflite: ^2.3.3
+  sqflite_common_ffi: ^2.3.2
+  path: ^1.9.0
 
 dependency_overrides:
   vector_math: ^2.1.5

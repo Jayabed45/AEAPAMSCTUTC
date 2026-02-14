@@ -9,9 +9,7 @@ import 'package:pdf/pdf.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../firebase_options.dart';
+import '../services/reports_db.dart';
 import '../widgets/notification_item.dart';
 import '../widgets/custom_header.dart';
 import '../widgets/confirmation_modal.dart';
@@ -36,6 +34,7 @@ class _AlertsScreenState extends State<AlertsScreen>
   final ApiService _apiService = ApiService();
   final List<Map<String, dynamic>> _exportedPdfs = [];
   Timer? _dailyExportTimer;
+  bool _dbReady = false;
 
   Widget _buildStatChip(
     BuildContext context,
@@ -365,7 +364,7 @@ class _AlertsScreenState extends State<AlertsScreen>
     }
   }
 
-  Future<void> _uploadPdfToFirebase(
+  Future<void> _saveReportToDb(
     String path, {
     required Map<String, double> summary,
     required String type,
@@ -374,40 +373,16 @@ class _AlertsScreenState extends State<AlertsScreen>
     if (!await file.exists()) {
       throw Exception('PDF file not found');
     }
+    if (!_dbReady) return;
     final now = DateTime.now();
     final fileName = path.split(Platform.pathSeparator).last;
-    final month = now.month.toString().padLeft(2, '0');
-    final storagePath = 'reports/${now.year}-$month/$fileName';
-    final storage = FirebaseStorage.instanceFor(
-      bucket: DefaultFirebaseOptions.currentPlatform.storageBucket,
+    await ReportsDb.instance.insertReport(
+      fileName: fileName,
+      localPath: path,
+      createdAt: now,
+      type: type,
+      summary: summary,
     );
-    final ref = storage.ref().child(storagePath);
-    final snapshot = await ref.putFile(
-      file,
-      SettableMetadata(contentType: 'application/pdf'),
-    );
-    if (snapshot.state != TaskState.success) {
-      throw Exception('Upload failed');
-    }
-    final url = await ref.getDownloadURL();
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    await FirebaseFirestore.instance.collection('reports').add({
-      'fileName': fileName,
-      'url': url,
-      'storagePath': storagePath,
-      'createdAt': Timestamp.fromDate(now),
-      'type': type,
-      'summary': {
-        'vAvg': summary['vAvg'] ?? 0,
-        'vMax': summary['vMax'] ?? 0,
-        'tAvg': summary['tAvg'] ?? 0,
-        'tMin': summary['tMin'] ?? 0,
-        'tMax': summary['tMax'] ?? 0,
-        'liters': summary['liters'] ?? 0,
-        'energy': summary['energy'] ?? 0,
-      },
-      'userId': uid,
-    });
   }
 
   Future<String> _generateAndSaveDailyPdf(
@@ -652,6 +627,7 @@ class _AlertsScreenState extends State<AlertsScreen>
     _animationController.forward();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initReportsDb();
       context.read<NotificationController>().loadNotifications();
       final controller = DefaultTabController.of(context);
       widget.onSectionChanged?.call('Notifications');
@@ -669,6 +645,32 @@ class _AlertsScreenState extends State<AlertsScreen>
     _animationController.dispose();
     _dailyExportTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _initReportsDb() async {
+    try {
+      await ReportsDb.instance.init();
+      _dbReady = true;
+      await _loadExportedReportsFromDb();
+    } catch (_) {}
+  }
+
+  Future<void> _loadExportedReportsFromDb() async {
+    try {
+      final items = await ReportsDb.instance.listReports(limit: 50);
+      _exportedPdfs
+        ..clear()
+        ..addAll(
+          items.map((e) {
+            final ts = e['createdAt'] as int;
+            return {
+              'path': e['localPath'] as String,
+              'time': DateTime.fromMillisecondsSinceEpoch(ts),
+            };
+          }),
+        );
+      setState(() {});
+    } catch (_) {}
   }
 
   void _scheduleDailyAutoExport() {
@@ -740,7 +742,8 @@ class _AlertsScreenState extends State<AlertsScreen>
         filePrefix: 'Daily_Report',
       );
       _recordExport(path);
-      await _uploadPdfToFirebase(path, summary: summary, type: 'auto');
+      await _saveReportToDb(path, summary: summary, type: 'auto');
+      await _loadExportedReportsFromDb();
     } catch (_) {}
   }
 
@@ -1441,24 +1444,12 @@ class _AlertsScreenState extends State<AlertsScreen>
                                                     filePrefix: 'Manual_Report',
                                                   );
                                               _recordExport(filePath);
-                                              try {
-                                                await _uploadPdfToFirebase(
-                                                  filePath,
-                                                  summary: summary,
-                                                  type: 'manual',
-                                                );
-                                              } catch (e) {
-                                                showDialog(
-                                                  context: context,
-                                                  builder:
-                                                      (context) => StatusModal(
-                                                        type: StatusType.error,
-                                                        title: 'Upload Failed',
-                                                        message: '$e',
-                                                      ),
-                                                );
-                                                return;
-                                              }
+                                              await _saveReportToDb(
+                                                filePath,
+                                                summary: summary,
+                                                type: 'manual',
+                                              );
+                                              await _loadExportedReportsFromDb();
                                               showDialog(
                                                 context: context,
                                                 builder:
