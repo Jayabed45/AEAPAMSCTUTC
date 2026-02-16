@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/alerts_screen.dart';
-import 'screens/settings_screen.dart';
+import 'screens/profile_screen.dart';
 import 'widgets/custom_animated_nav_bar.dart';
 
 class MainScreen extends StatefulWidget {
@@ -32,7 +32,7 @@ class _MainScreenState extends State<MainScreen> {
           }
         },
       ),
-      const SettingsScreen(),
+      const ProfileScreen(),
     ];
   }
 
@@ -62,9 +62,9 @@ class _MainScreenState extends State<MainScreen> {
             label: _alertsLabel,
           ),
           CustomNavBarItem(
-            icon: Icons.settings_outlined,
-            selectedIcon: Icons.settings,
-            label: 'Settings',
+            icon: Icons.person_outline,
+            selectedIcon: Icons.person,
+            label: 'Profile',
           ),
         ],
       ),

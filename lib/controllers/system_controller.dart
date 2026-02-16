@@ -139,6 +139,18 @@ class SystemController with ChangeNotifier {
         'Voltage drop detected: ${data.voltage.toStringAsFixed(1)}V.',
       );
     }
+    if (data.current >= 5.0) {
+      _triggerSystemNotification(
+        'High Current Alert',
+        'Current has reached ${data.current.toStringAsFixed(1)}A.',
+      );
+    }
+    if (data.power >= 300.0) {
+      _triggerSystemNotification(
+        'High Power Alert',
+        'Power has reached ${data.power.toStringAsFixed(1)}W.',
+      );
+    }
 
     // Status Check
     if (data.status.toLowerCase() == 'offline') {

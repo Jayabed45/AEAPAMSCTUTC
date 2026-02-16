@@ -41,7 +41,29 @@ exports.broadcastNotification = onDocumentCreated(
             }
 
             if (tokens.length === 0) {
-                logger.info("No tokens found to notify.");
+                logger.info("No tokens found; sending to topic 'system_alerts'.");
+                const topicMessage = {
+                    notification: {
+                        title: title,
+                        body: body,
+                    },
+                    android: {
+                        notification: {
+                            channelId: "high_importance_channel",
+                            priority: "high",
+                            clickAction: "FLUTTER_NOTIFICATION_CLICK",
+                        },
+                    },
+                    apns: {
+                        payload: {
+                            aps: {
+                                sound: "default",
+                                badge: 1,
+                            },
+                        },
+                    },
+                };
+                await admin.messaging().sendToTopic("system_alerts", topicMessage);
                 return;
             }
 
@@ -116,6 +138,26 @@ exports.checkSystemAnomalies = onDocumentUpdated(
                 title: "Overvoltage Alert",
                 description: `Voltage surge detected: ${newData.voltage}V.`,
                 icon_name: "bolt",
+                icon_color_hex: "#F44336",
+            });
+        }
+
+        // 4. Current Check (>= 5.0 A)
+        if (newData.current >= 5.0 && (!oldData || oldData.current < 5.0)) {
+            anomalies.push({
+                title: "High Current Alert",
+                description: `Current has reached ${newData.current}A.`,
+                icon_name: "electrical_services",
+                icon_color_hex: "#F44336",
+            });
+        }
+
+        // 5. Power Check (>= 300 W)
+        if (newData.power >= 300.0 && (!oldData || oldData.power < 300.0)) {
+            anomalies.push({
+                title: "High Power Alert",
+                description: `Power has reached ${newData.power}W.`,
+                icon_name: "power",
                 icon_color_hex: "#F44336",
             });
         }

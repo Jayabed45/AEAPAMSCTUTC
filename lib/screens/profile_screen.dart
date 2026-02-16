@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../widgets/profile_combined_chart.dart';
 import '../controllers/user_controller.dart';
 import 'edit_profile_screen.dart';
+import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -43,6 +44,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.settings, color: colorScheme.onSurface),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: Consumer<UserController>(
         builder: (context, controller, child) {
@@ -79,8 +91,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               child: CircleAvatar(
                                 radius: 45,
-                                backgroundColor: colorScheme.primary
-                                    .withValues(alpha: 0.1),
+                                backgroundColor: colorScheme.primary.withValues(
+                                  alpha: 0.1,
+                                ),
                                 child: Text(
                                   _getInitials(
                                     user?.fullName,

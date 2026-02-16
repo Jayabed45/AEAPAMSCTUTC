@@ -1,27 +1,203 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
-import '../services/api_service.dart';
 import '../models/system_data_model.dart';
+import '../controllers/system_controller.dart';
 
-class CombinedProfileChart extends StatelessWidget {
+OverlayEntry? _legendOverlayEntry;
+
+void _toggleLegendOverlayAt(BuildContext context, GlobalKey anchorKey) {
+  if (_legendOverlayEntry != null) {
+    _legendOverlayEntry!.remove();
+    _legendOverlayEntry = null;
+    return;
+  }
+  List<Widget> items(BuildContext ctx) => [
+    Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            shape: BoxShape.rectangle,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          'Water (L)',
+          style: TextStyle(
+            color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.7),
+            fontSize: 12,
+          ),
+        ),
+      ],
+    ),
+    Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: Theme.of(ctx).colorScheme.onSurface,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          'Power (W)',
+          style: TextStyle(
+            color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.7),
+            fontSize: 12,
+          ),
+        ),
+      ],
+    ),
+    Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: const BoxDecoration(
+            color: Colors.transparent,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          'Voltage (V)',
+          style: TextStyle(
+            color: Theme.of(ctx).colorScheme.primary.withValues(alpha: 0.7),
+            fontSize: 12,
+          ),
+        ),
+      ],
+    ),
+    Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: const BoxDecoration(
+            color: Colors.teal,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          'Energy (kWh)',
+          style: TextStyle(
+            color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.7),
+            fontSize: 12,
+          ),
+        ),
+      ],
+    ),
+    Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: const BoxDecoration(
+            color: AppColors.secondary,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          'Temp (°C)',
+          style: TextStyle(
+            color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.7),
+            fontSize: 12,
+          ),
+        ),
+      ],
+    ),
+  ];
+  final overlay = Overlay.of(context);
+  final RenderBox? overlayBox =
+      overlay.context.findRenderObject() as RenderBox?;
+  final RenderBox? anchorBox =
+      anchorKey.currentContext?.findRenderObject() as RenderBox?;
+  if (overlayBox == null || anchorBox == null) return;
+  final Offset anchor = anchorBox.localToGlobal(
+    Offset.zero,
+    ancestor: overlayBox,
+  );
+  final Size screen = overlayBox.size;
+  final double width = screen.width.clamp(0, double.infinity);
+  final double panelWidth = width > 360 ? 340 : width - 32;
+  double left = anchor.dx + (anchorBox.size.width / 2) - (panelWidth / 2);
+  left = left.clamp(16, width - panelWidth - 16);
+  double top = anchor.dy - 80;
+  top = top.clamp(16, screen.height - 160);
+  _legendOverlayEntry = OverlayEntry(
+    builder:
+        (ctx) => Stack(
+          children: [
+            Positioned(
+              left: left,
+              top: top,
+              child: Material(
+                color: Theme.of(ctx).cardColor,
+                elevation: 8,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: panelWidth),
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.center,
+                      children: items(ctx),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+  );
+  overlay.insert(_legendOverlayEntry!);
+}
+
+class CombinedProfileChart extends StatefulWidget {
   const CombinedProfileChart({super.key});
+  @override
+  State<CombinedProfileChart> createState() => _CombinedProfileChartState();
+}
+
+class _CombinedProfileChartState extends State<CombinedProfileChart> {
+  @override
+  void dispose() {
+    if (_legendOverlayEntry != null) {
+      _legendOverlayEntry!.remove();
+      _legendOverlayEntry = null;
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final apiService = ApiService();
-
-    return StreamBuilder<SystemDataModel?>(
-      stream: apiService.getSystemDataStream(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+    return Consumer<SystemController>(
+      builder: (context, controller, child) {
+        final SystemDataModel? data = controller.systemData;
+        if (controller.isLoading && data == null) {
           return _buildContainer(
             context,
             const Center(child: CircularProgressIndicator()),
           );
         }
-
-        final data = snapshot.data;
         if (data == null) {
           return _buildContainer(
             context,
@@ -51,123 +227,214 @@ class CombinedProfileChart extends StatelessWidget {
             ),
           );
         }
-
-        // Map real data to chart points using correct property names from SystemDataModel
+        // Live values from current_data (same source as CombinedDashboardCard)
         final baselinePower = data.power;
+        final baselineVoltage = data.voltage;
         final baselineTemp = data.temperature;
-        final baselineEnergy = data.dailyEnergy;
+        final baselineEnergyHour = data.energyHour;
+        final baselineWater = data.dailyLiters;
 
-        // Ensure we have reasonable defaults for maxY to prevent division by zero or empty charts
-        final energyMaxY = (baselineEnergy * 1.5).clamp(10.0, 1000.0);
         final powerMaxY = (baselinePower * 1.5).clamp(100.0, 10000.0);
+        final waterMaxY = (baselineWater * 1.5).clamp(10.0, 10000.0);
+        final voltageMax = baselineVoltage.clamp(1.0, 260.0);
+        final energyMax = baselineEnergyHour.clamp(1.0, 1000.0);
 
+        final multipliers = [0.9, 1.0, 1.1, 1.0, 0.95, 0.85, 0.8];
+
+        final iconKey = GlobalKey();
+        final double axisReserved =
+            MediaQuery.of(context).size.width < 380 ? 72 : 80;
+        final double lineLeftPadding = axisReserved + 16;
+        final double chartRightPadding =
+            MediaQuery.of(context).size.width < 380 ? 8 : 16;
+        final double axisLabelFontSize =
+            MediaQuery.of(context).size.width < 380 ? 10 : 12;
+        final double lineBarWidth =
+            MediaQuery.of(context).size.width < 380 ? 2.0 : 3.0;
         return _buildContainer(
           context,
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'System Analytics (Real-time)',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Legend
               Row(
                 children: [
-                  _buildLegendItem(
-                    context,
-                    'Energy (kWh)',
-                    AppColors.primary,
-                    isBox: true,
+                  Expanded(
+                    child: Text(
+                      'System Analytics (Real-time)',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 12),
-                  _buildLegendItem(
-                    context,
-                    'Power (W)',
-                    Theme.of(context).colorScheme.onSurface,
-                    isBox: false,
-                  ),
-                  const SizedBox(width: 12),
-                  _buildLegendItem(
-                    context,
-                    'Temp (°C)',
-                    AppColors.secondary,
-                    isBox: false,
+                  IconButton(
+                    key: iconKey,
+                    icon: Icon(
+                      Icons.info_outline,
+                      color: Theme.of(context).colorScheme.onSurface,
+                      size: 18,
+                    ),
+                    onPressed: () => _toggleLegendOverlayAt(context, iconKey),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Expanded(
                 child: Stack(
                   children: [
-                    // Layer 1: Bar Chart (Energy)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: lineLeftPadding,
+                        right: chartRightPadding,
+                      ),
+                      child: LineChart(
+                        LineChartData(
+                          minX: 0,
+                          maxX: (multipliers.length - 1).toDouble(),
+                          minY: 0,
+                          maxY: powerMaxY,
+                          clipData: const FlClipData(
+                            left: true,
+                            top: true,
+                            right: true,
+                            bottom: true,
+                          ),
+                          lineTouchData: LineTouchData(
+                            enabled: true,
+                            touchTooltipData: LineTouchTooltipData(
+                              getTooltipItems: (spots) {
+                                return List.generate(spots.length, (i) {
+                                  final s = spots[i];
+                                  String label;
+                                  String value;
+                                  if (i == 0) {
+                                    label = 'Power';
+                                    value = s.y.toStringAsFixed(0);
+                                  } else if (i == 1) {
+                                    label = 'Voltage';
+                                    value = ((baselineVoltage)).toStringAsFixed(
+                                      0,
+                                    );
+                                  } else if (i == 2) {
+                                    label = 'Energy';
+                                    value = ((baselineEnergyHour))
+                                        .toStringAsFixed(2);
+                                  } else {
+                                    label = 'Temp';
+                                    value = ((baselineTemp)).toStringAsFixed(0);
+                                  }
+                                  return LineTooltipItem(
+                                    '$label: $value',
+                                    TextStyle(
+                                      color:
+                                          Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  );
+                                });
+                              },
+                            ),
+                          ),
+                          titlesData: const FlTitlesData(show: false),
+                          gridData: const FlGridData(show: false),
+                          borderData: FlBorderData(show: false),
+                          lineBarsData: [
+                            LineChartBarData(
+                              spots: List.generate(
+                                multipliers.length,
+                                (i) => FlSpot(
+                                  i.toDouble(),
+                                  (baselinePower * multipliers[i]).clamp(
+                                    0.0,
+                                    powerMaxY,
+                                  ),
+                                ),
+                              ),
+                              isCurved: true,
+                              color: Theme.of(context).colorScheme.onSurface,
+                              barWidth: lineBarWidth,
+                              dotData: const FlDotData(show: false),
+                            ),
+                            LineChartBarData(
+                              spots: List.generate(
+                                multipliers.length,
+                                (i) => FlSpot(
+                                  i.toDouble(),
+                                  ((baselineVoltage / voltageMax) * powerMaxY)
+                                      .clamp(0.0, powerMaxY),
+                                ),
+                              ),
+                              isCurved: true,
+                              color: Theme.of(context).colorScheme.primary,
+                              barWidth: lineBarWidth,
+                              dotData: const FlDotData(show: false),
+                            ),
+                            LineChartBarData(
+                              spots: List.generate(
+                                multipliers.length,
+                                (i) => FlSpot(
+                                  i.toDouble(),
+                                  ((baselineEnergyHour / energyMax) * powerMaxY)
+                                      .clamp(0.0, powerMaxY),
+                                ),
+                              ),
+                              isCurved: true,
+                              color: Colors.teal,
+                              barWidth: lineBarWidth,
+                              dotData: const FlDotData(show: false),
+                            ),
+                            LineChartBarData(
+                              spots: List.generate(
+                                multipliers.length,
+                                (i) => FlSpot(
+                                  i.toDouble(),
+                                  ((baselineTemp / 60.0) * powerMaxY).clamp(
+                                    0.0,
+                                    powerMaxY,
+                                  ),
+                                ),
+                              ),
+                              isCurved: true,
+                              color: AppColors.secondary,
+                              barWidth: lineBarWidth,
+                              dotData: const FlDotData(show: false),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     BarChart(
                       BarChartData(
                         alignment: BarChartAlignment.spaceAround,
-                        maxY: energyMaxY,
+                        maxY: waterMaxY,
                         barTouchData: BarTouchData(enabled: false),
                         titlesData: FlTitlesData(
                           show: true,
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              reservedSize: 30,
-                              getTitlesWidget: (value, meta) {
-                                final style = TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface
-                                      .withValues(alpha: 0.5),
-                                  fontSize: 10,
-                                );
-                                String text;
-                                switch (value.toInt()) {
-                                  case 0:
-                                    text = 'Mon';
-                                    break;
-                                  case 1:
-                                    text = 'Tue';
-                                    break;
-                                  case 2:
-                                    text = 'Wed';
-                                    break;
-                                  case 3:
-                                    text = 'Thu';
-                                    break;
-                                  case 4:
-                                    text = 'Fri';
-                                    break;
-                                  case 5:
-                                    text = 'Sat';
-                                    break;
-                                  case 6:
-                                    text = 'Sun';
-                                    break;
-                                  default:
-                                    return Container();
-                                }
-                                return SideTitleWidget(
-                                  meta: meta,
-                                  child: Text(text, style: style),
-                                );
-                              },
-                            ),
+                          bottomTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
                           ),
                           leftTitles: AxisTitles(
                             sideTitles: SideTitles(
                               showTitles: true,
-                              reservedSize: 40,
+                              reservedSize: axisReserved,
                               getTitlesWidget: (value, meta) {
-                                return Text(
-                                  '${value.toInt()}',
-                                  style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.5),
-                                    fontSize: 10,
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 4),
+                                  child: Text(
+                                    value.toInt().toString(),
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.6),
+                                      fontSize: axisLabelFontSize,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 );
                               },
@@ -192,94 +459,22 @@ class CombinedProfileChart extends StatelessWidget {
                               ),
                         ),
                         borderData: FlBorderData(show: false),
-                        barGroups: [
-                          _makeBarGroup(
+                        barGroups: List.generate(
+                          multipliers.length,
+                          (i) => _makeBarGroup(
                             context,
-                            0,
-                            baselineEnergy * 0.7,
-                            energyMaxY,
+                            i,
+                            (baselineWater * multipliers[i]).clamp(
+                              0.0,
+                              waterMaxY,
+                            ),
+                            waterMaxY,
+                            rodWidth:
+                                MediaQuery.of(context).size.width < 380
+                                    ? 10
+                                    : 16,
                           ),
-                          _makeBarGroup(
-                            context,
-                            1,
-                            baselineEnergy * 0.8,
-                            energyMaxY,
-                          ),
-                          _makeBarGroup(
-                            context,
-                            2,
-                            baselineEnergy * 0.9,
-                            energyMaxY,
-                          ),
-                          _makeBarGroup(context, 3, baselineEnergy, energyMaxY),
-                          _makeBarGroup(
-                            context,
-                            4,
-                            baselineEnergy * 0.85,
-                            energyMaxY,
-                          ),
-                          _makeBarGroup(
-                            context,
-                            5,
-                            baselineEnergy * 0.6,
-                            energyMaxY,
-                          ),
-                          _makeBarGroup(
-                            context,
-                            6,
-                            baselineEnergy * 0.5,
-                            energyMaxY,
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Layer 2: Line Charts (Power & Temp)
-                    LineChart(
-                      LineChartData(
-                        minX: 0,
-                        maxX: 6,
-                        minY: 0,
-                        maxY: powerMaxY,
-                        lineTouchData: LineTouchData(enabled: true),
-                        titlesData: const FlTitlesData(show: false),
-                        gridData: const FlGridData(show: false),
-                        borderData: FlBorderData(show: false),
-                        lineBarsData: [
-                          // Power Line
-                          LineChartBarData(
-                            spots: [
-                              FlSpot(0, baselinePower * 0.6),
-                              FlSpot(1, baselinePower * 0.8),
-                              FlSpot(2, baselinePower * 0.7),
-                              FlSpot(3, baselinePower),
-                              FlSpot(4, baselinePower * 0.9),
-                              FlSpot(5, baselinePower * 0.5),
-                              FlSpot(6, baselinePower * 0.4),
-                            ],
-                            isCurved: true,
-                            color: Theme.of(context).colorScheme.onSurface,
-                            barWidth: 2,
-                            dotData: const FlDotData(show: false),
-                          ),
-                          // Temp Line (scaled for visibility against Power axis)
-                          // Assuming temp is around 20-60, we scale it to be visible on the power axis (1000-5000)
-                          // Or we could use a separate axis, but for simplicity we scale it
-                          LineChartBarData(
-                            spots: [
-                              FlSpot(0, (baselineTemp * 0.9 / 60) * powerMaxY),
-                              FlSpot(1, (baselineTemp * 1.0 / 60) * powerMaxY),
-                              FlSpot(2, (baselineTemp * 1.1 / 60) * powerMaxY),
-                              FlSpot(3, (baselineTemp / 60) * powerMaxY),
-                              FlSpot(4, (baselineTemp * 0.95 / 60) * powerMaxY),
-                              FlSpot(5, (baselineTemp * 0.85 / 60) * powerMaxY),
-                              FlSpot(6, (baselineTemp * 0.8 / 60) * powerMaxY),
-                            ],
-                            isCurved: true,
-                            color: AppColors.secondary,
-                            barWidth: 2,
-                            dotData: const FlDotData(show: false),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ],
@@ -293,9 +488,10 @@ class CombinedProfileChart extends StatelessWidget {
   }
 
   Widget _buildContainer(BuildContext context, Widget child) {
+    final isNarrow = MediaQuery.of(context).size.width < 380;
     return Container(
-      height: 300,
-      padding: const EdgeInsets.all(16),
+      height: isNarrow ? 260 : 300,
+      padding: EdgeInsets.all(isNarrow ? 12 : 16),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
@@ -309,15 +505,16 @@ class CombinedProfileChart extends StatelessWidget {
     BuildContext context,
     int x,
     double y,
-    double maxY,
-  ) {
+    double maxY, {
+    double? rodWidth,
+  }) {
     return BarChartGroupData(
       x: x,
       barRods: [
         BarChartRodData(
           toY: y,
           color: AppColors.primary,
-          width: 16,
+          width: rodWidth ?? 16,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
           backDrawRodData: BackgroundBarChartRodData(
             show: true,
@@ -325,37 +522,6 @@ class CombinedProfileChart extends StatelessWidget {
             color: Theme.of(
               context,
             ).colorScheme.onSurface.withValues(alpha: 0.05),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLegendItem(
-    BuildContext context,
-    String label,
-    Color color, {
-    required bool isBox,
-  }) {
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: isBox ? BoxShape.rectangle : BoxShape.circle,
-            borderRadius: isBox ? BorderRadius.circular(2) : null,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: Theme.of(
-              context,
-            ).colorScheme.onSurface.withValues(alpha: 0.6),
-            fontSize: 12,
           ),
         ),
       ],

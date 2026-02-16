@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
 import '../providers/theme_provider.dart';
 import '../controllers/user_controller.dart';
-import 'edit_profile_screen.dart';
+import 'profile_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -290,98 +290,92 @@ class _SettingsScreenState extends State<SettingsScreen>
     String email,
     String username,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: borderColor),
-        boxShadow:
-            Theme.of(context).brightness == Brightness.light
-                ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-                : [],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary, width: 2),
-            ),
-            child: CircleAvatar(
-              radius: 32,
-              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-              child: Text(
-                name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                style: GoogleFonts.poppins(
-                  color: AppColors.primary,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+    return InkWell(
+      borderRadius: BorderRadius.circular(24),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfileScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: borderColor),
+          boxShadow:
+              Theme.of(context).brightness == Brightness.light
+                  ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                  : [],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.primary, width: 2),
               ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.poppins(
-                    color: textColor,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  '@$username',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              child: CircleAvatar(
+                radius: 32,
+                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                child: Text(
+                  name.isNotEmpty ? name[0].toUpperCase() : 'U',
                   style: GoogleFonts.poppins(
                     color: AppColors.primary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  email,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.poppins(color: subTextColor, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const EditProfileScreen(),
-                ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: iconBgColor,
-                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.edit_outlined, color: textColor, size: 20),
             ),
-          ),
-        ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      color: textColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    '@$username',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      color: AppColors.primary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    email,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      color: subTextColor,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

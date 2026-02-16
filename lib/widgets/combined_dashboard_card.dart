@@ -67,13 +67,6 @@ class CombinedDashboardCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          'Real-Time Monitoring',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.secondary,
-                            fontSize: 12,
-                          ),
-                        ),
                       ],
                     ),
                   ),

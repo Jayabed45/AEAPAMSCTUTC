@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import '../models/notification_model.dart';
 import '../models/system_data_model.dart';
 import '../models/user_model.dart';
@@ -39,7 +40,7 @@ class ApiService {
   Stream<List<NotificationModel>> getNotificationsStream() {
     return _firestore
         .collection('notifications')
-        .orderBy('time', descending: true)
+        .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
           return snapshot.docs.map((doc) {
@@ -55,7 +56,7 @@ class ApiService {
       final querySnapshot =
           await _firestore
               .collection('notifications')
-              .orderBy('time', descending: true)
+              .orderBy('timestamp', descending: true)
               .get();
 
       return querySnapshot.docs.map((doc) {
@@ -165,7 +166,7 @@ class ApiService {
       await _firestore.collection('notifications').add({
         'title': title,
         'description': description,
-        'time': 'Just Now',
+        'time': DateFormat('hh:mm a').format(DateTime.now()),
         'is_unread': true,
         'icon_name': iconName,
         'icon_color_hex': iconColorHex,

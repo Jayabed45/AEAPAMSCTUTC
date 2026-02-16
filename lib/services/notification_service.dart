@@ -36,6 +36,14 @@ class NotificationService {
     // 2. Setup Local Notifications
     await _setupLocalNotifications();
 
+    // Subscribe to global alerts topic for background notifications even without auth
+    try {
+      await _fcm.subscribeToTopic('system_alerts');
+      debugPrint('Subscribed to topic: system_alerts');
+    } catch (e) {
+      debugPrint('Topic subscription failed: $e');
+    }
+
     // Update FCM foreground presentation options
     await FirebaseMessaging.instance
         .setForegroundNotificationPresentationOptions(
