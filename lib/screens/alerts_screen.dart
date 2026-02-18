@@ -449,9 +449,9 @@ class _AlertsScreenState extends State<AlertsScreen>
           double current = (d['current'] ?? 0).toDouble();
           double power = (d['power'] ?? 0).toDouble();
           double temperature = (d['temperature'] ?? 0).toDouble();
-          double liters = (d['dailyLiters'] ?? 0).toDouble();
-          double energyHour = (d['energyHour'] ?? 0).toDouble();
-          double dailyEnergy = (d['dailyEnergy'] ?? 0).toDouble();
+          double liters = (d['daily_liters'] ?? 0).toDouble();
+          double energyHour = (d['energy_hour'] ?? 0).toDouble();
+          double dailyEnergy = (d['daily_energy'] ?? 0).toDouble();
           String status = (d['status'] ?? '').toString();
 
           return [
@@ -713,8 +713,8 @@ class _AlertsScreenState extends State<AlertsScreen>
       for (final d in entries) {
         final v = (d['voltage'] ?? 0).toDouble();
         final t = (d['temperature'] ?? 0).toDouble();
-        final liters = (d['dailyLiters'] ?? 0).toDouble();
-        final energy = (d['dailyEnergy'] ?? 0).toDouble();
+        final liters = (d['daily_liters'] ?? 0).toDouble();
+        final energy = (d['daily_energy'] ?? 0).toDouble();
         vSum += v;
         tSum += t;
         count += 1;
@@ -1280,9 +1280,9 @@ class _AlertsScreenState extends State<AlertsScreen>
                                       'current': live.current,
                                       'power': live.power,
                                       'temperature': live.temperature,
-                                      'dailyLiters': live.dailyLiters,
-                                      'energyHour': live.energyHour,
-                                      'dailyEnergy': live.dailyEnergy,
+                                      'daily_liters': live.dailyLiters,
+                                      'energy_hour': live.energyHour,
+                                      'daily_energy': live.dailyEnergy,
                                       'status': live.status,
                                     };
                                   }
@@ -1323,9 +1323,9 @@ class _AlertsScreenState extends State<AlertsScreen>
                                     final t =
                                         (d['temperature'] ?? 0).toDouble();
                                     final liters =
-                                        (d['dailyLiters'] ?? 0).toDouble();
+                                        (d['daily_liters'] ?? 0).toDouble();
                                     final energy =
-                                        (d['dailyEnergy'] ?? 0).toDouble();
+                                        (d['daily_energy'] ?? 0).toDouble();
                                     vSum += v;
                                     tSum += t;
                                     count += 1;
